@@ -1,0 +1,188 @@
+{
+  "name": "Refinería Digital — Pipeline Completo",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "refinar",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "📥 Webhook Entrada",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "notes": "Recibe: guion (string), clips_urls (array), estilo (string), plan (eco|estandar|industrial), cliente_email (string)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body;\n\n// Validar input mínimo\nif (!body.guion || body.guion.trim().length < 10) {\n  throw new Error('Guion requerido (mínimo 10 caracteres)');\n}\n\nconst clips = body.clips_urls || [];\nconst clipList = clips.length > 0\n  ? clips.map((url, i) => `clip_${i+1}.mp4 (${url})`).join('\\n')\n  : 'stock_001.mp4 (Pexels API)\\nstock_002.mp4 (Pexels API)\\nstock_003.mp4 (Pexels API)';\n\nconst duracion = body.duracion || 60;\nconst jobId = Math.random().toString(36).slice(2, 10).toUpperCase();\n\nreturn [{\n  jobId,\n  guion: body.guion,\n  estilo: body.estilo || 'ensayo',\n  duracion,\n  plan: body.plan || 'estandar',\n  cliente_email: body.cliente_email || '',\n  clipList,\n  frames: duracion * 30,\n  timestamp: new Date().toISOString()\n}];"
+      },
+      "id": "prepare-input",
+      "name": "⚙️ Preparar Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "requestMethod": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "anthropic-version", "value": "2023-06-01" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-sonnet-4-20250514\",\n  \"max_tokens\": 1500,\n  \"system\": \"Eres el Arquitecto Jefe de la Refinería de Video Digital. Tu misión: transformar basura digital en Videos Coherentes de Pensamiento.\\n\\nLÓGICA DE REFINERÍA:\\n1. ANÁLISIS NARRATIVO: Extrae la esencia del guion. Identifica 3-5 momentos clave.\\n2. ASSET MAPPING: Asigna clips por emoción: TENSION (drama/conflicto), CALMA (reflexión), REVELACION (insight), ACCION (urgencia).\\n3. OVERLAYS: Frases de máximo 10 palabras, timing en frames (30fps).\\n4. PACING: Intro 15%, Desarrollo 50%, Revelación 25%, CTA 10%.\\n\\nRESPONDE SOLO CON JSON VÁLIDO sin markdown:\\n{\\\"title\\\":\\\"string\\\",\\\"duration\\\":frames_int,\\\"fps\\\":30,\\\"scenes\\\":[{\\\"type\\\":\\\"intro|development|revelation|cta\\\",\\\"from\\\":frame_int,\\\"to\\\":frame_int,\\\"clip\\\":\\\"clip_N.mp4\\\",\\\"emotion\\\":\\\"tension|calma|revelacion|accion\\\",\\\"overlay\\\":{\\\"text\\\":\\\"frase impacto max 10 palabras\\\",\\\"style\\\":\\\"impact|whisper|title|subtitle\\\",\\\"position\\\":\\\"bottom-center|center|top-center\\\"}}],\\\"audio\\\":{\\\"mood\\\":\\\"industrial|ambient|upbeat|dramatic\\\",\\\"fade_in\\\":0,\\\"fade_out\\\":frame_int},\\\"meta\\\":{\\\"style\\\":\\\"string\\\",\\\"coherence_score\\\":0-100,\\\"emotion_arc\\\":[\\\"string\\\"],\\\"key_message\\\":\\\"1 frase\\\",\\\"cost\\\":0.005,\\\"margin_10x\\\":true}}\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"TRABAJO: {{ $json.jobId }}\\nESTILO: {{ $json.estilo }}\\nDURACIÓN: {{ $json.duracion }}s ({{ $json.frames }} frames)\\nPLAN: {{ $json.plan }}\\n\\nGUION:\\n{{ $json.guion }}\\n\\nCLIPS:\\n{{ $json.clipList }}\"\n    }\n  ]\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "claude-architect",
+      "name": "🧠 Claude Arquitecto",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [700, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "anthropic-credentials",
+          "name": "Anthropic API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const claudeResponse = $input.first().json;\nconst rawText = claudeResponse.content[0].text;\n\n// Limpiar y parsear JSON\nconst clean = rawText.replace(/```json|```/g, '').trim();\nlet config;\ntry {\n  config = JSON.parse(clean);\n} catch (e) {\n  throw new Error('Claude no generó JSON válido: ' + rawText.slice(0, 200));\n}\n\n// Agregar datos del job\nconst prevData = $('⚙️ Preparar Input').first().json;\nconst plan = prevData.plan;\nconst prices = { eco: 0.35, estandar: 0.50, industrial: 0.20 };\nconst price = prices[plan] || 0.50;\n\nconfig.job = {\n  id: prevData.jobId,\n  plan,\n  price,\n  cost: 0.005,\n  margin: Math.round(price / 0.005) + 'x',\n  cliente_email: prevData.cliente_email,\n  timestamp: prevData.timestamp,\n  coherenceScore: config.meta?.coherence_score || 0,\n};\n\nconsole.log(`Job ${prevData.jobId} — Coherence: ${config.meta?.coherence_score}/100 — ${config.scenes?.length} escenas`);\n\nreturn [config];"
+      },
+      "id": "parse-json",
+      "name": "📋 Parsear JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [940, 300]
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "={{ $env.REMOTION_API_URL || 'http://localhost:3001/api/render' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jobId\": \"{{ $json.job.id }}\",\n  \"config\": {{ JSON.stringify($json) }},\n  \"outputBucket\": \"{{ $env.S3_BUCKET || 'refineria-videos' }}\"\n}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "remotion-render",
+      "name": "🎬 Remotion Render",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1180, 300],
+      "notes": "Envía el JSON de Claude a Remotion Lambda. Timeout 2 minutos. Requiere REMOTION_API_URL en env."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generar factura y mensaje de entrega\nconst renderResult = $input.first().json;\nconst jobConfig = $('📋 Parsear JSON').first().json;\n\nconst invoice = {\n  jobId: jobConfig.job.id,\n  plan: jobConfig.job.plan,\n  precio: jobConfig.job.price,\n  costoReal: jobConfig.job.cost,\n  margen: jobConfig.job.margin,\n  video: renderResult.outputUrl || `https://refineria.s3.amazonaws.com/videos/${jobConfig.job.id}.mp4`,\n  coherenceScore: jobConfig.job.coherenceScore,\n  keyMessage: jobConfig.meta?.key_message || '',\n  emotionArc: (jobConfig.meta?.emotion_arc || []).join(' → '),\n  mensaje: `Tu chatarra ha sido refinada con éxito.\\n\\n🎬 Video listo: ${renderResult.outputUrl}\\n\\n💰 Tarifa de Reciclaje Digital aplicada: $${jobConfig.job.price}\\n📊 Coherencia narrativa: ${jobConfig.job.coherenceScore}/100\\n🔮 Mensaje central: ${jobConfig.meta?.key_message || ''}\\n\\n♻️ La Refinería Digital — Donde otros ven ruido, nosotros destilamos claridad.`,\n};\n\nreturn [invoice];"
+      },
+      "id": "build-invoice",
+      "name": "💳 Generar Factura",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1420, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "refineria@tudominio.com",
+        "toEmail": "={{ $json.job?.cliente_email || $('⚙️ Preparar Input').first().json.cliente_email }}",
+        "subject": "🎬 Tu Video Refinado está Listo — La Refinería Digital",
+        "emailType": "text",
+        "text": "={{ $json.mensaje }}"
+      },
+      "id": "send-email",
+      "name": "📧 Entregar al Cliente",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1660, 300],
+      "notes": "Configurar credenciales SMTP. Se puede reemplazar por Telegram, WhatsApp, o Slack."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({\n  ok: true,\n  jobId: $('📋 Parsear JSON').first().json.job.id,\n  video: $('💳 Generar Factura').first().json.video,\n  precio: $('💳 Generar Factura').first().json.precio,\n  coherenceScore: $('💳 Generar Factura').first().json.coherenceScore,\n  emotionArc: $('💳 Generar Factura').first().json.emotionArc,\n  mensaje: 'Tu chatarra ha sido refinada. Tarifa de Reciclaje Digital aplicada: $' + $('💳 Generar Factura').first().json.precio\n}) }}"
+      },
+      "id": "webhook-response",
+      "name": "📤 Respuesta Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1420, 500]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": "={{ $env.GOOGLE_SHEET_ID }}",
+        "sheetName": "Refineria_Jobs",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $('⚙️ Preparar Input').first().json.timestamp }}",
+            "jobId": "={{ $('📋 Parsear JSON').first().json.job.id }}",
+            "plan": "={{ $('📋 Parsear JSON').first().json.job.plan }}",
+            "precio": "={{ $('📋 Parsear JSON').first().json.job.price }}",
+            "costoReal": "0.005",
+            "coherenceScore": "={{ $('📋 Parsear JSON').first().json.job.coherenceScore }}",
+            "videoUrl": "={{ $('💳 Generar Factura').first().json.video }}",
+            "clienteEmail": "={{ $('⚙️ Preparar Input').first().json.cliente_email }}"
+          }
+        }
+      },
+      "id": "log-to-sheets",
+      "name": "📊 Log a Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [1660, 500],
+      "notes": "Registra cada job en Google Sheets para tracking. Requiere credenciales de Google Sheets en n8n."
+    }
+  ],
+  "connections": {
+    "📥 Webhook Entrada": {
+      "main": [[ { "node": "⚙️ Preparar Input", "type": "main", "index": 0 } ]]
+    },
+    "⚙️ Preparar Input": {
+      "main": [[ { "node": "🧠 Claude Arquitecto", "type": "main", "index": 0 } ]]
+    },
+    "🧠 Claude Arquitecto": {
+      "main": [[ { "node": "📋 Parsear JSON", "type": "main", "index": 0 } ]]
+    },
+    "📋 Parsear JSON": {
+      "main": [[ { "node": "🎬 Remotion Render", "type": "main", "index": 0 } ]]
+    },
+    "🎬 Remotion Render": {
+      "main": [[ { "node": "💳 Generar Factura", "type": "main", "index": 0 } ]]
+    },
+    "💳 Generar Factura": {
+      "main": [
+        [ { "node": "📧 Entregar al Cliente", "type": "main", "index": 0 } ],
+        [ { "node": "📤 Respuesta Webhook", "type": "main", "index": 0 } ]
+      ]
+    },
+    "📧 Entregar al Cliente": {
+      "main": [[ { "node": "📊 Log a Google Sheets", "type": "main", "index": 0 } ]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["refineria", "video", "claude", "remotion"],
+  "meta": {
+    "description": "Pipeline completo de La Refinería Digital. Importar en n8n: Settings → Import Workflow.",
+    "cost": "$0.005/video",
+    "margin": "70x-100x",
+    "requiredCredentials": ["Anthropic API Key", "SMTP Email", "Google Sheets (opcional)"],
+    "requiredEnvVars": ["ANTHROPIC_API_KEY", "REMOTION_API_URL", "S3_BUCKET (opcional)", "GOOGLE_SHEET_ID (opcional)"]
+  }
+}

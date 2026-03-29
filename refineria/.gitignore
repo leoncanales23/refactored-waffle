@@ -1,0 +1,10 @@
+node_modules/
+.env
+uploads/
+out/
+dist/
+.remotion/
+*.mp4
+*.mov
+*.webm
+.DS_Store

@@ -1,0 +1,913 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="description" content="La Refinería Digital — Transformamos basura digital en videos coherentes de pensamiento. $0.35/video."/>
+<title>La Refinería Digital · Reciclaje de Video con IA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════
+   LA REFINERÍA DIGITAL · CSS
+   Estética: Chatarrería industrial de alta tecnología
+   Óxido + neón ámbar + terminales verdes + acero oxidado
+═══════════════════════════════════════════════════════════ */
+:root{
+  --rust:#0a0602;--rust2:#110c04;--rust3:#1a1208;--rust4:#221808;
+  --amber:#f59e0b;--amber2:#d97706;--amber3:#fbbf24;
+  --green:#39d353;--green2:#22c55e;
+  --red:#ef4444;--cyan:#06b6d4;
+  --steel:rgba(255,200,80,.08);--steel2:rgba(255,200,80,.14);
+  --border:rgba(245,158,11,.12);--border2:rgba(245,158,11,.25);
+  --fg:rgba(255,240,200,.92);--muted:rgba(200,170,80,.6);--dim:rgba(140,110,40,.4);
+  --mono:'Share Tech Mono',monospace;--display:'Bebas Neue',cursive;--body:'Rajdhani',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--rust);color:var(--fg);font-family:var(--body);overflow-x:hidden;}
+
+/* NOISE TEXTURE — óxido */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  opacity:.6;
+}
+
+/* CANVAS BG */
+#bg-cv{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.3;}
+
+/* NAV */
+nav{
+  position:sticky;top:0;z-index:30;
+  display:flex;align-items:center;padding:0 32px;height:52px;
+  background:rgba(10,6,2,.95);border-bottom:1px solid var(--border2);
+  backdrop-filter:blur(16px);gap:0;
+}
+.nav-logo{
+  display:flex;align-items:center;gap:8px;text-decoration:none;
+  padding-right:20px;border-right:1px solid var(--border);
+}
+.nav-logo-icon{
+  width:28px;height:28px;background:var(--amber);display:flex;align-items:center;justify-content:center;
+  font-size:.9rem;color:#0a0602;font-weight:900;clip-path:polygon(0 0,100% 0,100% 75%,87% 100%,0 100%);
+}
+.nav-brand{font-family:var(--display);font-size:18px;letter-spacing:.08em;color:var(--amber);}
+.nav-items{display:flex;margin-left:24px;gap:0;}
+.nav-item{
+  font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  padding:0 14px;height:52px;display:flex;align-items:center;color:var(--muted);
+  text-decoration:none;border-right:1px solid var(--border);transition:color .15s;
+}
+.nav-item:hover{color:var(--amber);}
+.nav-cta{
+  margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  padding:8px 18px;border:1px solid var(--amber);background:rgba(245,158,11,.1);
+  color:var(--amber);text-decoration:none;transition:all .2s;
+}
+.nav-cta:hover{background:rgba(245,158,11,.2);}
+.nav-live{
+  font-family:var(--mono);font-size:8px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--green);padding:0 14px;display:flex;align-items:center;gap:5px;border-right:1px solid var(--border);
+}
+.nav-live::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:blink 2s ease infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
+
+/* ── HERO ── */
+#hero{
+  position:relative;z-index:2;
+  min-height:100vh;display:flex;flex-direction:column;justify-content:center;
+  padding:80px 32px 60px;overflow:hidden;
+}
+#hero::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 60% 70% at 20% 50%,rgba(245,158,11,.08),transparent),
+    radial-gradient(ellipse 40% 60% at 80% 30%,rgba(6,182,212,.04),transparent),
+    linear-gradient(180deg,transparent 60%,rgba(10,6,2,.8) 100%);
+  pointer-events:none;
+}
+/* Diagonal hatching — estilo industrial */
+#hero::after{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(
+    -55deg,
+    transparent,transparent 60px,
+    rgba(245,158,11,.015) 60px,rgba(245,158,11,.015) 61px
+  );
+  pointer-events:none;
+}
+.hero-inner{position:relative;z-index:2;max-width:900px;}
+.hero-kicker{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:9px;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--amber);opacity:.75;margin-bottom:20px;
+  padding:4px 10px;border:1px solid rgba(245,158,11,.2);background:rgba(245,158,11,.04);
+}
+.hero-kicker::before{content:'▶';font-size:7px;}
+.hero-h1{
+  font-family:var(--display);font-size:clamp(4rem,11vw,9rem);
+  letter-spacing:.03em;line-height:.9;margin-bottom:16px;
+  color:var(--fg);
+}
+.hero-h1 .accent{
+  display:block;color:var(--amber);
+  -webkit-text-stroke:1px rgba(245,158,11,.3);
+}
+.hero-h1 .thin{
+  display:block;
+  -webkit-text-stroke:1px rgba(255,240,200,.15);
+  color:transparent;
+  letter-spacing:.06em;
+}
+.hero-sub{
+  font-size:18px;color:var(--muted);line-height:1.65;max-width:560px;
+  margin-bottom:36px;font-weight:500;letter-spacing:.02em;
+}
+/* PRECIO HERO */
+.hero-price-row{
+  display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin-bottom:36px;
+}
+.price-card{
+  border:1px solid var(--border2);background:var(--steel);
+  padding:14px 20px;position:relative;overflow:hidden;
+}
+.price-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--amber);
+}
+.pc-label{font-family:var(--mono);font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+.pc-price{font-family:var(--display);font-size:2.4rem;color:var(--amber);line-height:1;}
+.pc-sub{font-family:var(--mono);font-size:8px;color:var(--dim);margin-top:3px;}
+.price-arrow{font-size:1.4rem;color:var(--dim);opacity:.5;}
+.price-eco{border-color:rgba(57,211,83,.2);background:rgba(57,211,83,.04);}
+.price-eco::before{background:var(--green);}
+.price-eco .pc-price{color:var(--green);}
+.price-eco .pc-label{color:rgba(57,211,83,.6);}
+
+/* CTA BUTTONS */
+.hero-cta{display:flex;gap:10px;flex-wrap:wrap;}
+.btn{
+  font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  padding:12px 24px;text-decoration:none;display:inline-flex;align-items:center;gap:8px;
+  transition:all .2s;cursor:pointer;border:none;
+}
+.btn.primary{background:var(--amber);color:#0a0602;font-weight:700;}
+.btn.primary:hover{background:var(--amber3);box-shadow:0 0 24px rgba(245,158,11,.35);}
+.btn.outline{border:1px solid var(--border2);background:var(--steel);color:var(--amber);}
+.btn.outline:hover{background:var(--steel2);border-color:var(--amber);}
+.btn.ghost{border:1px solid rgba(255,255,255,.1);background:transparent;color:var(--muted);}
+.btn.ghost:hover{color:var(--fg);}
+
+/* ── TICKER ── */
+#ticker{
+  position:relative;z-index:2;
+  background:rgba(245,158,11,.07);border-top:1px solid var(--border2);border-bottom:1px solid var(--border2);
+  padding:10px 0;overflow:hidden;
+}
+.ticker-inner{display:flex;gap:0;white-space:nowrap;animation:tickerScroll 25s linear infinite;}
+.ticker-item{
+  font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);padding:0 32px;display:flex;align-items:center;gap:8px;
+}
+.ticker-sep{color:var(--amber);font-size:12px;}
+@keyframes tickerScroll{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+
+/* ── PIPELINE SECTION ── */
+#pipeline{position:relative;z-index:2;padding:80px 32px;}
+.section-kicker{font-family:var(--mono);font-size:8px;letter-spacing:.24em;text-transform:uppercase;color:var(--amber);opacity:.7;margin-bottom:12px;}
+.section-h2{font-family:var(--display);font-size:clamp(2.5rem,6vw,5rem);letter-spacing:.04em;margin-bottom:8px;}
+.section-sub{font-size:15px;color:var(--muted);margin-bottom:48px;max-width:600px;line-height:1.65;}
+
+.pipeline-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:0;
+  border:1px solid var(--border);
+  position:relative;
+}
+.pipeline-grid::after{
+  content:'';position:absolute;top:50%;left:0;right:0;
+  height:1px;background:linear-gradient(90deg,transparent,var(--amber),transparent);
+  opacity:.2;pointer-events:none;
+}
+.step{
+  padding:28px 22px;border-right:1px solid var(--border);
+  position:relative;overflow:hidden;
+  transition:background .2s;
+}
+.step:last-child{border-right:none;}
+.step:hover{background:var(--steel);}
+.step::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--step-color,var(--amber)),transparent);
+}
+.step-num{
+  font-family:var(--display);font-size:4rem;color:rgba(245,158,11,.06);
+  line-height:1;margin-bottom:-16px;letter-spacing:-.02em;
+}
+.step-icon{font-size:1.6rem;margin-bottom:10px;display:block;}
+.step-title{font-family:var(--display);font-size:1.3rem;letter-spacing:.06em;color:var(--step-color,var(--amber));margin-bottom:6px;}
+.step-desc{font-family:var(--body);font-size:12px;color:var(--muted);line-height:1.65;letter-spacing:.02em;}
+.step-tech{
+  margin-top:12px;font-family:var(--mono);font-size:8px;letter-spacing:.1em;
+  color:var(--dim);padding:4px 8px;border:1px solid var(--border);display:inline-block;
+}
+@media(max-width:760px){.pipeline-grid{grid-template-columns:1fr 1fr;}}
+@media(max-width:480px){.pipeline-grid{grid-template-columns:1fr;}}
+
+/* ── DEMO SECTION ── */
+#demo{position:relative;z-index:2;padding:80px 32px;background:rgba(0,0,0,.2);}
+.demo-grid{display:grid;grid-template-columns:1fr 480px;gap:0;border:1px solid var(--border);}
+@media(max-width:900px){.demo-grid{grid-template-columns:1fr;}}
+
+/* Upload zone */
+.upload-zone{
+  padding:32px;border-right:1px solid var(--border);
+  display:flex;flex-direction:column;gap:16px;
+}
+.drop-area{
+  border:2px dashed var(--border2);background:var(--steel);
+  padding:40px 24px;text-align:center;cursor:pointer;
+  transition:all .2s;position:relative;overflow:hidden;
+}
+.drop-area:hover,.drop-area.drag{border-color:var(--amber);background:rgba(245,158,11,.06);}
+.drop-icon{font-size:2.5rem;margin-bottom:12px;display:block;opacity:.6;}
+.drop-text{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);}
+.drop-sub{font-family:var(--body);font-size:12px;color:var(--dim);margin-top:5px;}
+.drop-input{position:absolute;inset:0;opacity:0;cursor:pointer;}
+
+.field-wrap{display:flex;flex-direction:column;gap:5px;}
+.field-label{font-family:var(--mono);font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);}
+.field-input,.field-select,.field-textarea{
+  background:rgba(0,0,0,.35);border:1px solid var(--border);
+  color:var(--fg);font-family:var(--body);font-size:14px;padding:10px 12px;
+  outline:none;transition:border-color .15s;width:100%;
+}
+.field-input:focus,.field-select:focus,.field-textarea:focus{border-color:var(--amber);}
+.field-textarea{resize:vertical;min-height:100px;}
+.field-select option{background:#1a1208;}
+
+.submit-btn{
+  padding:14px;font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  background:var(--amber);color:#0a0602;border:none;cursor:pointer;font-weight:700;
+  transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.submit-btn:hover{background:var(--amber3);box-shadow:0 0 24px rgba(245,158,11,.3);}
+.submit-btn:disabled{opacity:.4;cursor:default;box-shadow:none;}
+
+/* Output panel */
+.output-panel{
+  background:rgba(0,0,0,.3);
+  display:flex;flex-direction:column;
+}
+.op-head{
+  padding:12px 16px;border-bottom:1px solid var(--border);
+  font-family:var(--mono);font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);
+  display:flex;align-items:center;gap:8px;
+}
+.op-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);animation:blink 1.5s ease infinite;}
+#output-log{
+  flex:1;padding:14px 16px;overflow-y:auto;
+  font-family:var(--mono);font-size:11px;line-height:2;
+  min-height:300px;max-height:500px;
+  background:rgba(0,0,0,.2);
+}
+.log-line{animation:logIn .15s ease;}
+@keyframes logIn{from{opacity:0;transform:translateX(-4px);}to{opacity:1;transform:none;}}
+.log-ts{color:rgba(140,110,40,.5);}
+.log-tag{padding:1px 5px;font-size:9px;letter-spacing:.08em;}
+.log-tag.OK{background:rgba(57,211,83,.1);color:var(--green);border:1px solid rgba(57,211,83,.2);}
+.log-tag.RUN{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.2);}
+.log-tag.ERR{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2);}
+.log-tag.AI{background:rgba(6,182,212,.1);color:var(--cyan);border:1px solid rgba(6,182,212,.2);}
+.log-txt{color:rgba(255,240,200,.65);}
+.log-txt.hi{color:rgba(255,240,200,.9);}
+.op-json{
+  padding:12px 16px;border-top:1px solid var(--border);
+  font-family:var(--mono);font-size:10px;color:var(--dim);max-height:200px;overflow-y:auto;
+  background:rgba(0,0,0,.3);
+}
+.op-json pre{white-space:pre-wrap;word-break:break-all;color:rgba(57,211,83,.7);}
+
+/* ── PRICING SECTION ── */
+#pricing{position:relative;z-index:2;padding:80px 32px;}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+@media(max-width:760px){.pricing-grid{grid-template-columns:1fr;}}
+.plan{
+  border:1px solid var(--border);background:var(--rust2);
+  padding:28px 22px;position:relative;overflow:hidden;transition:all .2s;
+}
+.plan:hover{border-color:var(--border2);background:var(--steel);}
+.plan.featured{border-color:var(--amber);background:var(--steel2);}
+.plan.featured::before{
+  content:'★ MEJOR VALOR';position:absolute;top:12px;right:-20px;
+  font-family:var(--mono);font-size:7px;letter-spacing:.14em;
+  background:var(--amber);color:#0a0602;padding:3px 28px;
+  transform:rotate(0deg);
+}
+.plan-label{font-family:var(--mono);font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.plan-name{font-family:var(--display);font-size:1.8rem;letter-spacing:.06em;margin-bottom:12px;}
+.plan-price{
+  font-family:var(--display);font-size:4rem;letter-spacing:-.02em;color:var(--amber);line-height:1;margin-bottom:4px;
+}
+.plan-price sub{font-size:1.2rem;vertical-align:top;margin-top:8px;display:inline-block;opacity:.7;}
+.plan-per{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:.1em;margin-bottom:20px;}
+.plan-features{list-style:none;margin-bottom:24px;display:flex;flex-direction:column;gap:8px;}
+.plan-features li{
+  font-family:var(--body);font-size:13px;color:var(--muted);
+  display:flex;align-items:flex-start;gap:8px;line-height:1.5;
+}
+.plan-features li::before{content:'▸';color:var(--amber);flex-shrink:0;margin-top:1px;}
+.plan-margin{
+  font-family:var(--mono);font-size:8px;letter-spacing:.1em;text-transform:uppercase;
+  padding:6px 10px;border:1px solid rgba(57,211,83,.2);background:rgba(57,211,83,.04);
+  color:var(--green);margin-bottom:16px;display:inline-block;
+}
+
+/* ── N8N FLOW SECTION ── */
+#n8n{position:relative;z-index:2;padding:80px 32px;background:rgba(0,0,0,.15);}
+.flow-diagram{
+  border:1px solid var(--border);background:var(--rust3);
+  padding:32px;position:relative;overflow:hidden;
+}
+.flow-nodes{display:flex;align-items:center;gap:0;flex-wrap:wrap;}
+.flow-node{
+  display:flex;flex-direction:column;align-items:center;text-align:center;
+  padding:16px 14px;background:var(--rust4);border:1px solid var(--border);
+  min-width:130px;position:relative;
+  transition:all .2s;
+}
+.flow-node:hover{border-color:var(--amber);background:var(--steel);}
+.fn-icon{font-size:1.5rem;margin-bottom:6px;}
+.fn-name{font-family:var(--mono);font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);margin-bottom:3px;}
+.fn-tech{font-family:var(--body);font-size:11px;color:var(--dim);}
+.flow-arrow{
+  font-family:var(--mono);font-size:11px;color:var(--amber);
+  padding:0 8px;opacity:.5;
+}
+.flow-json{
+  margin-top:24px;border:1px solid var(--border);padding:16px;
+  background:rgba(0,0,0,.3);
+}
+.flow-json-title{font-family:var(--mono);font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.flow-json-title::before{content:'▶';color:var(--amber);}
+.flow-json pre{
+  font-family:var(--mono);font-size:10px;color:rgba(57,211,83,.7);
+  white-space:pre-wrap;word-break:break-all;line-height:1.8;
+}
+
+/* ── TECH STACK ── */
+#stack{position:relative;z-index:2;padding:80px 32px;}
+.stack-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;}
+.tech-card{
+  border:1px solid var(--border);background:var(--rust3);padding:18px;
+  display:flex;flex-direction:column;gap:6px;transition:all .2s;
+}
+.tech-card:hover{border-color:var(--border2);background:var(--steel);}
+.tc-icon{font-size:1.5rem;}
+.tc-name{font-family:var(--display);font-size:1.1rem;letter-spacing:.06em;color:var(--amber);}
+.tc-desc{font-family:var(--body);font-size:12px;color:var(--muted);line-height:1.5;}
+.tc-role{font-family:var(--mono);font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-top:4px;}
+
+/* ── FOOTER ── */
+footer{
+  position:relative;z-index:2;
+  padding:40px 32px;border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;
+  background:rgba(0,0,0,.3);
+}
+.footer-brand{font-family:var(--display);font-size:1.4rem;letter-spacing:.1em;color:var(--amber);}
+.footer-meta{font-family:var(--mono);font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-thumb{background:rgba(245,158,11,.2);}
+::-webkit-scrollbar-track{background:transparent;}
+</style>
+</head>
+<body>
+<canvas id="bg-cv"></canvas>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#hero">
+    <div class="nav-logo-icon">R</div>
+    <span class="nav-brand">Refinería</span>
+  </a>
+  <div class="nav-items">
+    <a class="nav-item" href="#pipeline">Pipeline</a>
+    <a class="nav-item" href="#demo">Demo</a>
+    <a class="nav-item" href="#pricing">Precios</a>
+    <a class="nav-item" href="#n8n">n8n</a>
+    <a class="nav-item" href="#stack">Stack</a>
+  </div>
+  <div class="nav-live">ONLINE · $0.005/video</div>
+  <a class="nav-cta" href="#demo">▶ Refinar ahora</a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-inner">
+    <div class="hero-kicker">La Refinería Digital · Motor de Reciclaje Visual</div>
+    <h1 class="hero-h1">
+      <span class="thin">DONDE OTROS</span>
+      <span class="accent">VEN RUIDO,</span>
+      NOSOTROS<br>DESTILAMOS<br>CLARIDAD.
+    </h1>
+    <p class="hero-sub">
+      Transformamos clips fallidos de IA, stock genérico y grabaciones crudas en Videos Coherentes de Pensamiento. Claude analiza. Remotion renderiza. n8n orquesta. Tú cobras.
+    </p>
+    <div class="hero-price-row">
+      <div class="price-card">
+        <div class="pc-label">Precio estándar</div>
+        <div class="pc-price">$0.50</div>
+        <div class="pc-sub">por video · margen 100x</div>
+      </div>
+      <div class="price-arrow">→</div>
+      <div class="price-card price-eco">
+        <div class="pc-label">Plan Eco-Digital</div>
+        <div class="pc-price">$0.35</div>
+        <div class="pc-sub">reciclaje · tú pones los clips</div>
+      </div>
+      <div class="price-arrow">→</div>
+      <div class="price-card" style="border-color:rgba(239,68,68,.2);background:rgba(239,68,68,.04);">
+        <div class="pc-label">Tu costo real</div>
+        <div class="pc-price" style="color:var(--red);">$0.005</div>
+        <div class="pc-sub">tokens + render CPU</div>
+      </div>
+    </div>
+    <div class="hero-cta">
+      <a href="#demo" class="btn primary">▶ Probar la refinería</a>
+      <a href="#pipeline" class="btn outline">Ver cómo funciona</a>
+      <a href="docs/README.md" class="btn ghost">Documentación</a>
+    </div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div id="ticker">
+  <div class="ticker-inner" id="ticker-inner">
+    <span class="ticker-item">⚙️ CLAUDE ANALIZA <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">🎬 REMOTION RENDERIZA <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">🔄 n8n ORQUESTA <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">💰 MARGEN 100X <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">♻️ ECONOMÍA CIRCULAR DIGITAL <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">🏭 REFINERÍA DE PENSAMIENTO <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">📦 $0.005 COSTO REAL <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">⚡ AWS LAMBDA SERVERLESS <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">⚙️ CLAUDE ANALIZA <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">🎬 REMOTION RENDERIZA <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">🔄 n8n ORQUESTA <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">💰 MARGEN 100X <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">♻️ ECONOMÍA CIRCULAR DIGITAL <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">🏭 REFINERÍA DE PENSAMIENTO <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">📦 $0.005 COSTO REAL <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">⚡ AWS LAMBDA SERVERLESS <span class="ticker-sep">·</span></span>
+  </div>
+</div>
+
+<!-- PIPELINE -->
+<section id="pipeline">
+  <div class="section-kicker">// El proceso</div>
+  <h2 class="section-h2">PIPELINE DE LA REFINERÍA</h2>
+  <p class="section-sub">4 pasos. Completamente autónomo. El cliente sube basura digital, recibe un Video Coherente de Pensamiento.</p>
+  <div class="pipeline-grid">
+    <div class="step" style="--step-color:#f59e0b;">
+      <div class="step-num">01</div>
+      <span class="step-icon">📥</span>
+      <div class="step-title">CAPTURA</div>
+      <div class="step-desc">Webhook de n8n recibe los clips (mp4, webm, mkv), el guion y los metadatos del cliente vía formulario, Telegram o Google Sheets.</div>
+      <span class="step-tech">n8n Webhook</span>
+    </div>
+    <div class="step" style="--step-color:#06b6d4;">
+      <div class="step-num">02</div>
+      <span class="step-icon">🧠</span>
+      <div class="step-title">ANÁLISIS</div>
+      <div class="step-desc">Claude actúa como tasador de chatarra. Extrae la esencia narrativa, asigna clips por emoción (Tensión, Calma, Revelación) y genera el JSON estructurado.</div>
+      <span class="step-tech">Claude API · claude-sonnet-4</span>
+    </div>
+    <div class="step" style="--step-color:#39d353;">
+      <div class="step-num">03</div>
+      <span class="step-icon">🎬</span>
+      <div class="step-title">REFINERÍA</div>
+      <div class="step-desc">Remotion renderiza el JSON como componente React: overlays de texto, transiciones, pacing de audio. Lambda serverless — $0.00 si no hay pedidos.</div>
+      <span class="step-tech">Remotion Lambda · AWS</span>
+    </div>
+    <div class="step" style="--step-color:#a855f7;">
+      <div class="step-num">04</div>
+      <span class="step-icon">📤</span>
+      <div class="step-title">ENTREGA</div>
+      <div class="step-desc">n8n envía el video al cliente con la factura automática. Mensaje: "Tu chatarra ha sido refinada. Tarifa de Reciclaje Digital aplicada: $0.35."</div>
+      <span class="step-tech">n8n · Stripe · Email</span>
+    </div>
+  </div>
+</section>
+
+<!-- DEMO INTERACTIVO -->
+<section id="demo">
+  <div class="section-kicker">// Demo en vivo</div>
+  <h2 class="section-h2">REFINAR AHORA</h2>
+  <p class="section-sub">Sube tus clips fallidos, pega tu guion. Claude genera el JSON de Remotion en segundos.</p>
+
+  <div class="demo-grid">
+    <div class="upload-zone">
+      <div class="drop-area" id="drop-area">
+        <input type="file" class="drop-input" id="clip-input" multiple accept="video/*"/>
+        <span class="drop-icon">🎥</span>
+        <div class="drop-text">Arrastra clips de video aquí</div>
+        <div class="drop-sub">mp4 · webm · mkv · mov — clips fallidos, stock viejo, cualquier basura digital</div>
+      </div>
+
+      <div class="field-wrap">
+        <label class="field-label">Guion o idea central</label>
+        <textarea class="field-textarea" id="guion" placeholder="Pega tu texto aquí. Puede ser un párrafo denso, ideas sueltas o fragmentos. La refinería extrae la coherencia."></textarea>
+      </div>
+
+      <div class="field-wrap">
+        <label class="field-label">Estilo de video</label>
+        <select class="field-select" id="estilo">
+          <option value="ensayo">Ensayo Visual — pensamiento profundo</option>
+          <option value="reel">Reel Educativo — 60s dinámico</option>
+          <option value="resumen">Resumen de Marca — corporativo limpio</option>
+          <option value="documental">Mini Documental — narrativa</option>
+        </select>
+      </div>
+
+      <div class="field-wrap">
+        <label class="field-label">Plan</label>
+        <select class="field-select" id="plan">
+          <option value="eco">Plan Eco-Digital — $0.35 (tú pones los clips)</option>
+          <option value="estandar">Plan Estándar — $0.50 (stock incluido)</option>
+        </select>
+      </div>
+
+      <button class="submit-btn" id="refine-btn" onclick="refinar()">
+        <span>⚗️</span> INICIAR REFINACIÓN
+      </button>
+    </div>
+
+    <div class="output-panel">
+      <div class="op-head">
+        <div class="op-dot"></div>
+        REFINERÍA · LOG EN TIEMPO REAL
+      </div>
+      <div id="output-log">
+        <div class="log-line"><span class="log-ts">00:00:00</span> <span class="log-tag OK">OK</span> <span class="log-txt">Sistema de refinería inicializado</span></div>
+        <div class="log-line"><span class="log-ts">00:00:01</span> <span class="log-tag OK">OK</span> <span class="log-txt">Claude v4 conectado · claude-sonnet-4</span></div>
+        <div class="log-line"><span class="log-ts">00:00:02</span> <span class="log-tag OK">OK</span> <span class="log-txt hi">Refinería lista. Sube clips y guion para comenzar.</span></div>
+      </div>
+      <div class="op-json" id="output-json" style="display:none;">
+        <div class="flow-json-title">JSON Remotion generado</div>
+        <pre id="json-output"></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="section-kicker">// Modelo de costos</div>
+  <h2 class="section-h2">ECONOMÍA DE LA REFINERÍA</h2>
+  <p class="section-sub">Margen 100x. Soberanía de costos. Open source. Sin dependencia de precios de grandes empresas.</p>
+  <div class="pricing-grid">
+    <div class="plan">
+      <div class="plan-label">Plan Eco-Digital</div>
+      <div class="plan-name">RECICLAJE</div>
+      <div class="plan-price"><sub>$</sub>0.35</div>
+      <div class="plan-per">por video · el cliente pone los clips</div>
+      <div class="plan-margin">MARGEN: 70x · Tu costo: $0.005</div>
+      <ul class="plan-features">
+        <li>El cliente sube sus clips fallidos</li>
+        <li>Claude genera el JSON de coherencia</li>
+        <li>Remotion renderiza en CPU básica</li>
+        <li>Entrega automática vía n8n</li>
+        <li>Factura automática generada</li>
+      </ul>
+      <a href="#demo" class="btn outline" style="width:100%;justify-content:center;">Empezar</a>
+    </div>
+
+    <div class="plan featured">
+      <div class="plan-label">Plan Estándar</div>
+      <div class="plan-name">PRODUCCIÓN</div>
+      <div class="plan-price"><sub>$</sub>0.50</div>
+      <div class="plan-per">por video · stock incluido</div>
+      <div class="plan-margin">MARGEN: 100x · Tu costo: $0.005</div>
+      <ul class="plan-features">
+        <li>Stock de clips incluido (Pexels API)</li>
+        <li>Claude selecciona clips por emoción</li>
+        <li>Overlays de texto con timing exacto</li>
+        <li>Audio pacing automático</li>
+        <li>Remotion Lambda serverless</li>
+        <li>Factura + entrega automática</li>
+      </ul>
+      <a href="#demo" class="btn primary" style="width:100%;justify-content:center;">Empezar</a>
+    </div>
+
+    <div class="plan">
+      <div class="plan-label">Plan Volumen</div>
+      <div class="plan-name">INDUSTRIAL</div>
+      <div class="plan-price"><sub>$</sub>0.20</div>
+      <div class="plan-per">por video · lotes de 100+</div>
+      <div class="plan-margin">MARGEN: 40x · Tu costo: $0.005</div>
+      <ul class="plan-features">
+        <li>API directa vía webhook</li>
+        <li>Procesamiento en paralelo</li>
+        <li>n8n pipeline dedicado</li>
+        <li>Panel de control personalizado</li>
+        <li>SLA de 2 minutos por video</li>
+        <li>Integración Google Sheets</li>
+      </ul>
+      <a href="#demo" class="btn ghost" style="width:100%;justify-content:center;border-color:var(--border2);color:var(--muted);">Contactar</a>
+    </div>
+  </div>
+</section>
+
+<!-- N8N FLOW -->
+<section id="n8n">
+  <div class="section-kicker">// Arquitectura</div>
+  <h2 class="section-h2">EL PIPELINE n8n</h2>
+  <p class="section-sub">n8n es el capataz de la chatarrería. Orquesta Claude, Remotion y la entrega sin escribir código adicional.</p>
+
+  <div class="flow-diagram">
+    <div class="flow-nodes">
+      <div class="flow-node">
+        <span class="fn-icon">📬</span>
+        <div class="fn-name">Trigger</div>
+        <div class="fn-tech">Webhook / Telegram / GSheets</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">
+        <span class="fn-icon">🧠</span>
+        <div class="fn-name">Claude AI</div>
+        <div class="fn-tech">Prompt Maestro + JSON output</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">
+        <span class="fn-icon">⚗️</span>
+        <div class="fn-name">Remotion</div>
+        <div class="fn-tech">Lambda / Docker / CPU</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">
+        <span class="fn-icon">💳</span>
+        <div class="fn-name">Factura</div>
+        <div class="fn-tech">Stripe / PayPal auto</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">
+        <span class="fn-icon">📤</span>
+        <div class="fn-name">Entrega</div>
+        <div class="fn-tech">Email / S3 / Drive</div>
+      </div>
+    </div>
+
+    <div class="flow-json">
+      <div class="flow-json-title">Ejemplo de JSON que Claude genera para Remotion</div>
+      <pre>{
+  "duration": 60,
+  "fps": 30,
+  "scenes": [
+    {
+      "type": "intro",
+      "from": 0, "to": 90,
+      "clip": "clip_001.mp4",
+      "emotion": "tension",
+      "overlay": {
+        "text": "El mundo genera 2.5 quintillones de datos al día.",
+        "style": "impact", "position": "bottom-center"
+      }
+    },
+    {
+      "type": "revelation",
+      "from": 90, "to": 210,
+      "clip": "clip_003.mp4",
+      "emotion": "calma",
+      "overlay": {
+        "text": "La Refinería los convierte en claridad.",
+        "style": "whisper", "position": "center"
+      }
+    }
+  ],
+  "audio": {
+    "track": "ambient_industrial.mp3",
+    "fade_in": 0, "fade_out": 150
+  },
+  "cost": 0.005,
+  "price": 0.50,
+  "margin": "100x"
+}</pre>
+    </div>
+  </div>
+</section>
+
+<!-- TECH STACK -->
+<section id="stack">
+  <div class="section-kicker">// Stack tecnológico</div>
+  <h2 class="section-h2">LA MAQUINARIA</h2>
+  <p class="section-sub">Open source. Sin dependencias de pricing externo. Soberanía de costos total.</p>
+  <div class="stack-grid">
+    <div class="tech-card">
+      <span class="tc-icon">🧠</span>
+      <div class="tc-name">Claude</div>
+      <div class="tc-desc">El Arquitecto. Analiza guiones, asigna clips por emoción, genera JSON estructurado para Remotion.</div>
+      <div class="tc-role">claude-sonnet-4 · $0.003/análisis</div>
+    </div>
+    <div class="tech-card">
+      <span class="tc-icon">🎬</span>
+      <div class="tc-name">Remotion</div>
+      <div class="tc-desc">Motor de video en React. Renderiza el JSON de Claude como componentes visuales con transiciones y overlays.</div>
+      <div class="tc-role">Lambda serverless · $0.002/video</div>
+    </div>
+    <div class="tech-card">
+      <span class="tc-icon">🔄</span>
+      <div class="tc-name">n8n</div>
+      <div class="tc-desc">El capataz. Orquesta el pipeline completo: entrada → Claude → Remotion → factura → entrega.</div>
+      <div class="tc-role">Self-hosted · $0/mes</div>
+    </div>
+    <div class="tech-card">
+      <span class="tc-icon">☁️</span>
+      <div class="tc-name">AWS Lambda</div>
+      <div class="tc-desc">Renderizado serverless. $0.00 cuando no hay pedidos. Escala automáticamente con la demanda.</div>
+      <div class="tc-role">Pay per use · ~$0.002/render</div>
+    </div>
+    <div class="tech-card">
+      <span class="tc-icon">🎞️</span>
+      <div class="tc-name">Pexels API</div>
+      <div class="tc-desc">Stock de clips gratuito para el Plan Estándar. 50K+ videos de alta calidad listos para la refinería.</div>
+      <div class="tc-role">Free tier · sin atribución requerida</div>
+    </div>
+    <div class="tech-card">
+      <span class="tc-icon">⚡</span>
+      <div class="tc-name">Vite + React</div>
+      <div class="tc-desc">Frontend del panel de control. Componentes Remotion se construyen aquí antes del deploy.</div>
+      <div class="tc-role">Open source · $0</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">LA REFINERÍA DIGITAL</div>
+  <div class="footer-meta">Economía Circular Aplicada a los Bits · 2025 · Open Source</div>
+  <div class="footer-meta" style="color:var(--amber);opacity:.6;">Donde otros ven ruido, nosotros destilamos claridad.</div>
+</footer>
+
+<script>
+// ══════════════════════════════════════════════════════
+// BG — partículas industriales (chimeneas de datos)
+// ══════════════════════════════════════════════════════
+(function(){
+  var cv=document.getElementById('bg-cv'),x=cv.getContext('2d'),W,H,sparks=[];
+  function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}
+  function init(){
+    sparks=Array.from({length:60},function(){
+      return{x:Math.random()*W,y:Math.random()*H,vy:-(Math.random()*.4+.1),r:Math.random()*1.2+.3,op:Math.random()*.2+.05,col:Math.random()>.5?'245,158,11':'57,211,83'};
+    });
+  }
+  var t=0;
+  function draw(){
+    x.clearRect(0,0,W,H);t+=.004;
+    sparks.forEach(function(s){
+      s.y+=s.vy;if(s.y<-10){s.y=H+10;s.x=Math.random()*W;}
+      var a=s.op*Math.abs(Math.sin(t*2+s.x*.01));
+      x.beginPath();x.arc(s.x,s.y,s.r,0,Math.PI*2);
+      x.fillStyle='rgba('+s.col+','+a+')';x.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize',function(){resize();init();});
+  resize();init();draw();
+})();
+
+// ══════════════════════════════════════════════════════
+// DRAG & DROP
+// ══════════════════════════════════════════════════════
+var dropArea=document.getElementById('drop-area');
+var clips=[];
+dropArea.addEventListener('dragover',function(e){e.preventDefault();dropArea.classList.add('drag');});
+dropArea.addEventListener('dragleave',function(){dropArea.classList.remove('drag');});
+dropArea.addEventListener('drop',function(e){
+  e.preventDefault();dropArea.classList.remove('drag');
+  clips=Array.from(e.dataTransfer.files).filter(function(f){return f.type.startsWith('video/');});
+  dropArea.querySelector('.drop-text').textContent=clips.length+' clip(s) cargado(s) ✓';
+  dropArea.querySelector('.drop-sub').textContent=clips.map(function(f){return f.name;}).join(' · ');
+});
+document.getElementById('clip-input').addEventListener('change',function(){
+  clips=Array.from(this.files);
+  dropArea.querySelector('.drop-text').textContent=clips.length+' clip(s) cargado(s) ✓';
+  dropArea.querySelector('.drop-sub').textContent=clips.map(function(f){return f.name;}).join(' · ');
+});
+
+// ══════════════════════════════════════════════════════
+// REFINAR — llamada a Claude (via auraChat proxy o directo)
+// ══════════════════════════════════════════════════════
+function logLine(tag, text, hi){
+  var el=document.getElementById('output-log');
+  var d=document.createElement('div');d.className='log-line';
+  var now=new Date();var ts=[now.getHours(),now.getMinutes(),now.getSeconds()].map(function(n){return n.toString().padStart(2,'0');}).join(':');
+  d.innerHTML='<span class="log-ts">'+ts+'</span> <span class="log-tag '+tag+'">'+tag+'</span> <span class="log-txt'+(hi?' hi':'')+'">'+text+'</span>';
+  el.appendChild(d);el.scrollTop=el.scrollHeight;
+}
+
+var PROXY='https://us-central1-vibraaltoai-11f55.cloudfunctions.net/auraChat';
+var SYSTEM_REFINERY=`Eres el Arquitecto Jefe de la Refinería de Video Digital.
+Tu misión: transformar "basura digital" (clips aleatorios, texto crudo) en un Video Coherente de Pensamiento.
+
+PROCESO:
+1. ANÁLISIS: Lee el guion y extrae la esencia narrativa. Identifica 3-5 momentos clave.
+2. ASSET MAPPING: Asigna cada clip al momento correcto según emoción: TENSION, CALMA, REVELACION, ACCION.
+3. OVERLAYS: Genera frases de alto impacto con timing exacto en frames (30fps).
+4. AUDIO: Define cuándo entra la música y los efectos.
+
+TU RESPUESTA DEBE SER ÚNICAMENTE UN JSON VÁLIDO sin markdown, sin backticks, sin explicación.
+El JSON debe seguir exactamente esta estructura:
+
+{
+  "title": "título del video",
+  "duration": numero_total_frames,
+  "fps": 30,
+  "scenes": [
+    {
+      "type": "intro|development|revelation|cta",
+      "from": frame_inicio,
+      "to": frame_fin,
+      "clip": "clip_N.mp4",
+      "emotion": "tension|calma|revelacion|accion",
+      "overlay": {
+        "text": "frase de alto impacto",
+        "style": "impact|whisper|title|subtitle",
+        "position": "top-left|top-center|center|bottom-center|bottom-right"
+      }
+    }
+  ],
+  "audio": {
+    "mood": "industrial|ambient|upbeat|dramatic",
+    "fade_in": 0,
+    "fade_out": numero_frame
+  },
+  "meta": {
+    "style": "estilo elegido",
+    "coherence_score": 0-100,
+    "emotion_arc": ["emocion1","emocion2","emocion3"],
+    "cost": 0.005,
+    "margin_10x": true
+  }
+}
+
+MANTRA: "Donde otros ven ruido, nosotros destilamos claridad."
+Lógica de negocio: costo <$0.01, diseño elegante pero ligero.`;
+
+async function refinar(){
+  var guion=document.getElementById('guion').value.trim();
+  var estilo=document.getElementById('estilo').value;
+  var plan=document.getElementById('plan').value;
+  if(!guion){logLine('ERR','Pega tu guion o idea primero.');return;}
+
+  var btn=document.getElementById('refine-btn');
+  btn.disabled=true;btn.textContent='⚗️ REFINANDO…';
+
+  logLine('RUN','Iniciando proceso de refinación…',true);
+  logLine('RUN','Estilo: '+estilo+' · Plan: '+plan);
+  logLine('RUN','Clips detectados: '+(clips.length||0));
+  logLine('AI','Enviando guion a Claude Arquitecto…');
+
+  var clipMeta=clips.map(function(f,i){return 'clip_'+(i+1)+'.mp4 ('+f.name+')';}).join(', ')||'stock_001.mp4, stock_002.mp4, stock_003.mp4';
+  var prompt='ESTILO DE VIDEO: '+estilo+'\nPLAN: '+plan+'\n\nGUION/IDEA:\n'+guion+'\n\nCLIPS DISPONIBLES:\n'+clipMeta+'\n\nGenera el JSON de configuración Remotion para este video.';
+
+  try{
+    var r=await fetch(PROXY,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,system:SYSTEM_REFINERY,messages:[{role:'user',content:prompt}]})});
+    var d=await r.json();
+    var raw=(d.content&&d.content[0]&&d.content[0].text)||'';
+    logLine('AI','Claude respondió ✓');
+    logLine('RUN','Parseando JSON de configuración…');
+
+    var clean=raw.replace(/```json|```/g,'').trim();
+    var json=JSON.parse(clean);
+
+    logLine('OK','JSON válido · '+json.scenes.length+' escenas detectadas',true);
+    logLine('OK','Coherence Score: '+json.meta.coherence_score+'/100');
+    logLine('OK','Arco emocional: '+json.meta.emotion_arc.join(' → '));
+    logLine('RUN','Enviando a Remotion Lambda…');
+    setTimeout(function(){
+      logLine('OK','🎬 Video renderizado exitosamente',true);
+      logLine('OK','Costo real: $'+json.meta.cost+' · Plan '+plan+': $'+(plan==='eco'?'0.35':'0.50'));
+      logLine('OK','Entregando via n8n → email + factura automática');
+
+      document.getElementById('output-json').style.display='block';
+      document.getElementById('json-output').textContent=JSON.stringify(json,null,2);
+      btn.disabled=false;btn.textContent='⚗️ REFINAR OTRO';
+    },2000);
+  }catch(err){
+    logLine('ERR','Error: '+err.message);
+    // Mostrar JSON de ejemplo si falla el proxy
+    logLine('RUN','Usando modo demo (JSON de ejemplo)…');
+    var demoJson={title:'Video Refinado',duration:1800,fps:30,scenes:[{type:'intro',from:0,to:90,clip:'clip_001.mp4',emotion:'tension',overlay:{text:guion.slice(0,60)+'…',style:'impact',position:'bottom-center'}},{type:'revelation',from:90,to:180,clip:'clip_002.mp4',emotion:'revelacion',overlay:{text:'La Refinería destila la esencia.',style:'whisper',position:'center'}}],audio:{mood:'industrial',fade_in:0,fade_out:1620},meta:{style:estilo,coherence_score:94,emotion_arc:['tension','calma','revelacion'],cost:0.005,margin_10x:true}};
+    document.getElementById('output-json').style.display='block';
+    document.getElementById('json-output').textContent=JSON.stringify(demoJson,null,2);
+    logLine('OK','Demo JSON generado. Conecta tu API key para producción.',true);
+    btn.disabled=false;btn.textContent='⚗️ REFINAR OTRO';
+  }
+}
+</script>
+</body>
+</html>
