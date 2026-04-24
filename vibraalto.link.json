@@ -1,0 +1,7 @@
+{
+  "hub_repo": "leoncanales23/lc-j.a.r.v.i.s",
+  "hub_branch": "claude/deploy-github-zip-frontend-mAye8",
+  "role": "sandbox",
+  "portal_url": "https://lc-vibraalto-cl.web.app",
+  "backend": "http://34.74.27.168:8000"
+}
