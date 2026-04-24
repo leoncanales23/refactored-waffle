@@ -1,15 +1,7 @@
 {
-  "name": "refactored-waffle",
-  "role": "satellite",
-  "version": "0.1.0",
-  "hub": "leoncanales23/lc-j.a.r.v.i.s",
-  "description": "Connector/gateway satélite. Aloja refineria-digital y server Express para orquestación secundaria.",
-  "depends_on": {
-    "protocol": "leoncanales23/vbc-protocol"
-  },
-  "exposes": {
-    "server": "server/",
-    "refineria": "refineria/",
-    "docker": "Dockerfile"
-  }
+  "hub_repo": "leoncanales23/lc-j.a.r.v.i.s",
+  "hub_branch": "claude/deploy-github-zip-frontend-mAye8",
+  "role": "sandbox",
+  "portal_url": "https://lc-vibraalto-cl.web.app",
+  "backend": "http://34.74.27.168:8000"
 }
