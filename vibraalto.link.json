@@ -1,0 +1,15 @@
+{
+  "name": "refactored-waffle",
+  "role": "satellite",
+  "version": "0.1.0",
+  "hub": "leoncanales23/lc-j.a.r.v.i.s",
+  "description": "Connector/gateway satélite. Aloja refineria-digital y server Express para orquestación secundaria.",
+  "depends_on": {
+    "protocol": "leoncanales23/vbc-protocol"
+  },
+  "exposes": {
+    "server": "server/",
+    "refineria": "refineria/",
+    "docker": "Dockerfile"
+  }
+}
