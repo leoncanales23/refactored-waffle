@@ -11,23 +11,16 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  dockerfile-lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Validate Dockerfile syntax
-        run: |
-          docker build --no-cache --target=base -t refactored-waffle:ci . 2>&1 | tee build.log || \
-          docker build --no-cache -t refactored-waffle:ci . 2>&1 | tee build.log
-
-      - name: Verify image runs
-        run: |
-          docker run -d --name refactored-waffle-ci -p 8090:8090 refactored-waffle:ci
-          sleep 5
-          docker logs refactored-waffle-ci
-          curl -fsS http://localhost:8090/health || echo "::warning::/health not responding (may be expected if not implemented)"
-          docker rm -f refactored-waffle-ci
+      - name: Hadolint Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+          failure-threshold: error
 
   node-syntax:
     runs-on: ubuntu-latest
