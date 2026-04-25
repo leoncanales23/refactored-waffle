@@ -1,19 +1,26 @@
 "use strict";
-const express  = require("express");
-const cors     = require("cors");
-const path     = require("path");
-const Anthropic = require("@anthropic-ai/sdk").default;
+const express   = require("express");
+const cors      = require("cors");
+const path      = require("path");
+const Anthropic  = require("@anthropic-ai/sdk").default;
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const PORT = process.env.PORT || 8090;
+// Servir dashboard estático desde /public
+app.use(express.static(path.join(__dirname, "../public")));
+
+const PORT      = process.env.PORT || 8090;
+const VERSION   = "0.3.0";
+const STARTED   = Date.now();
+
+const ts = () => new Date().toISOString();
 
 /* ── Helpers ── */
 function parseMetrics(body = {}) {
   return {
-    city:      typeof body.city      === "string" ? body.city.trim() : "Buin",
+    city:      typeof body.city      === "string" ? body.city.trim()      : "Buin",
     weekLabel: typeof body.weekLabel === "string" ? body.weekLabel.trim() : "Semana actual",
     uvx:  clampMetric(body.uvx,  71),
     mpi:  clampMetric(body.mpi,  68),
@@ -48,14 +55,31 @@ async function generateNarrative(data) {
     });
     return r.content[0].text.trim();
   } catch (e) {
-    console.error("[NERHIA] Claude error:", e.message);
+    console.error(`[${ts()}][NERHIA] Claude error:`, e.message);
     return `Semana operacional en ${data.city}. Índices dentro del rango nominal. Sistema NERHIA activo.`;
   }
 }
 
-/* ── GET /narrative — genera sólo el texto (sin render) ── */
+/* ── GET /status ── */
+app.get("/status", (_req, res) => {
+  res.json({
+    ok: true,
+    service: "refactored-waffle",
+    version: VERSION,
+    uptimeSeconds: Math.floor((Date.now() - STARTED) / 1000),
+    timestamp: ts(),
+  });
+});
+
+/* ── GET /health (alias legacy) ── */
+app.get("/health", (_req, res) => {
+  res.json({ ok: true, service: "refactored-waffle", version: VERSION });
+});
+
+/* ── GET /narrative ── */
 app.get("/narrative", async (req, res) => {
   const data = parseMetrics(req.query);
+  console.log(`[${ts()}][narrative] ${data.city} / ${data.weekLabel}`);
   try {
     const narrative = await generateNarrative(data);
     res.json({ ok: true, city: data.city, weekLabel: data.weekLabel, narrative });
@@ -64,15 +88,16 @@ app.get("/narrative", async (req, res) => {
   }
 });
 
-/* ── GET /preview — retorna los props del video sin renderizar ── */
+/* ── GET /preview ── */
 app.get("/preview", (req, res) => {
   const data = parseMetrics(req.query);
   res.json({ ok: true, composition: "NERHIAReport", props: data });
 });
 
-/* ── POST /render — genera video completo ── */
+/* ── POST /render ── */
 app.post("/render", async (req, res) => {
   const data = parseMetrics(req.body);
+  console.log(`[${ts()}][render] Iniciando para ${data.city}…`);
 
   try {
     const { bundle }   = require("@remotion/bundler");
@@ -83,7 +108,6 @@ app.post("/render", async (req, res) => {
     const narrative = await generateNarrative(data);
     data.narrative  = narrative;
 
-    console.log(`[Waffle] Bundling para ${data.city} / ${data.weekLabel}…`);
     const bundleDir = await bundle({
       entryPoint: path.join(__dirname, "../src/index.ts")
     });
@@ -98,21 +122,16 @@ app.post("/render", async (req, res) => {
       codec: "h264", outputLocation: outPath, inputProps: data
     });
 
-    console.log(`[Waffle] Render listo → ${outPath}`);
+    console.log(`[${ts()}][render] Listo → ${outPath}`);
     res.download(outPath, "nerhia-report.mp4", () => {
       try { fs.unlinkSync(outPath); } catch (_) {}
     });
   } catch (err) {
-    console.error("[Waffle] Render error:", err.message);
+    console.error(`[${ts()}][render] Error:`, err.message);
     res.status(500).json({ ok: false, error: err.message });
   }
 });
 
-/* ── GET /health ── */
-app.get("/health", (_req, res) => {
-  res.json({ ok: true, service: "refactored-waffle", version: "0.2.0" });
-});
-
 app.listen(PORT, () =>
-  console.log(`[Waffle] Refinería activa · puerto ${PORT}`)
+  console.log(`[${ts()}][Waffle] v${VERSION} activa · puerto ${PORT}`)
 );
