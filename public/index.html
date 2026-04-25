@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NERHIA · Dashboard</title>
+  <style>
+    :root {
+      --bg: #0a0d14;
+      --panel: #111622;
+      --border: #1e2d4a;
+      --cyan: #00e5ff;
+      --gold: #ffd600;
+      --red: #ff4444;
+      --green: #00e676;
+      --text: #cfd8e3;
+      --muted: #556070;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Courier New', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    header h1 {
+      font-size: 1.8rem;
+      letter-spacing: .3em;
+      color: var(--cyan);
+      text-shadow: 0 0 20px #00e5ff66;
+    }
+    header p { color: var(--muted); font-size: .75rem; margin-top: .4rem; }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 680px;
+      margin-bottom: 1.5rem;
+    }
+    .card h2 {
+      font-size: .7rem;
+      letter-spacing: .2em;
+      color: var(--cyan);
+      margin-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: .5rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .8rem;
+    }
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: .3rem;
+      font-size: .72rem;
+      color: var(--muted);
+      letter-spacing: .1em;
+    }
+    input, select {
+      background: #0d1420;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      color: var(--text);
+      padding: .45rem .7rem;
+      font-family: inherit;
+      font-size: .85rem;
+      outline: none;
+      transition: border-color .2s;
+    }
+    input:focus, select:focus { border-color: var(--cyan); }
+    .full { grid-column: 1 / -1; }
+
+    .btn-row {
+      display: flex;
+      gap: .8rem;
+      margin-top: 1rem;
+    }
+    button {
+      flex: 1;
+      padding: .6rem 1rem;
+      border: 1px solid var(--cyan);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--cyan);
+      font-family: inherit;
+      font-size: .8rem;
+      letter-spacing: .1em;
+      cursor: pointer;
+      transition: background .2s, box-shadow .2s;
+    }
+    button:hover {
+      background: #00e5ff15;
+      box-shadow: 0 0 12px #00e5ff44;
+    }
+    button.gold {
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+    button.gold:hover {
+      background: #ffd60015;
+      box-shadow: 0 0 12px #ffd60044;
+    }
+
+    .output {
+      min-height: 80px;
+      background: #0d1420;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem;
+      font-size: .82rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: var(--text);
+    }
+    .output.loading { color: var(--muted); }
+    .output.ok      { border-color: var(--green); }
+    .output.err     { border-color: var(--red); color: var(--red); }
+
+    .status-bar {
+      display: flex;
+      gap: 1.5rem;
+      font-size: .72rem;
+      color: var(--muted);
+      letter-spacing: .08em;
+    }
+    .dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--muted);
+      margin-right: .4rem;
+      vertical-align: middle;
+    }
+    .dot.green { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .dot.red   { background: var(--red); }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>◈ NERHIA DASHBOARD</h1>
+  <p>Sistema de Inteligencia Urbana · refactored-waffle</p>
+</header>
+
+<!-- Status -->
+<div class="card" id="status-card">
+  <h2>▸ ESTADO DEL SISTEMA</h2>
+  <div class="status-bar">
+    <span><span class="dot" id="dot"></span><span id="status-text">Verificando…</span></span>
+    <span>v<span id="status-ver">—</span></span>
+    <span>uptime <span id="status-up">—</span></span>
+  </div>
+</div>
+
+<!-- Formulario -->
+<div class="card">
+  <h2>▸ PARÁMETROS URBANOS</h2>
+  <div class="grid">
+    <label class="full">CIUDAD
+      <input id="city" type="text" value="Buin" />
+    </label>
+    <label class="full">ETIQUETA DE SEMANA
+      <input id="weekLabel" type="text" value="Semana actual" />
+    </label>
+    <label>UVX <input id="uvx" type="number" value="71" min="0" max="200" /></label>
+    <label>MPI <input id="mpi" type="number" value="68" min="0" max="200" /></label>
+    <label>CAI <input id="cai" type="number" value="65" min="0" max="200" /></label>
+    <label>IEI <input id="iei" type="number" value="63" min="0" max="200" /></label>
+    <label>UEI <input id="uei" type="number" value="74" min="0" max="200" /></label>
+    <label>PM10 (µg/m³) <input id="pm10" type="number" value="45" min="0" max="600" /></label>
+    <label class="full">ALERTA
+      <select id="alerta">
+        <option value="OK">OK</option>
+        <option value="ALERTA">ALERTA</option>
+        <option value="CRITICO">CRITICO</option>
+      </select>
+    </label>
+  </div>
+  <div class="btn-row">
+    <button onclick="callNarrative()">◈ GENERAR NARRATIVA</button>
+    <button class="gold" onclick="callPreview()">▷ VER PROPS</button>
+  </div>
+</div>
+
+<!-- Output -->
+<div class="card">
+  <h2>▸ RESPUESTA</h2>
+  <div class="output" id="output">Esperando consulta…</div>
+</div>
+
+<script>
+  const BASE = window.location.origin;
+
+  function params() {
+    return new URLSearchParams({
+      city:      document.getElementById('city').value,
+      weekLabel: document.getElementById('weekLabel').value,
+      uvx:  document.getElementById('uvx').value,
+      mpi:  document.getElementById('mpi').value,
+      cai:  document.getElementById('cai').value,
+      iei:  document.getElementById('iei').value,
+      uei:  document.getElementById('uei').value,
+      pm10: document.getElementById('pm10').value,
+      alerta: document.getElementById('alerta').value,
+    }).toString();
+  }
+
+  function setOutput(text, state = '') {
+    const el = document.getElementById('output');
+    el.className = 'output' + (state ? ' ' + state : '');
+    el.textContent = text;
+  }
+
+  async function callNarrative() {
+    setOutput('Generando narrativa con Claude…', 'loading');
+    try {
+      const r = await fetch(`${BASE}/narrative?${params()}`);
+      const d = await r.json();
+      if (d.ok) {
+        setOutput(`[${d.city} · ${d.weekLabel}]\n\n${d.narrative}`, 'ok');
+      } else {
+        setOutput('Error: ' + d.error, 'err');
+      }
+    } catch(e) { setOutput('Error de red: ' + e.message, 'err'); }
+  }
+
+  async function callPreview() {
+    setOutput('Consultando props del video…', 'loading');
+    try {
+      const r = await fetch(`${BASE}/preview?${params()}`);
+      const d = await r.json();
+      setOutput(JSON.stringify(d, null, 2), 'ok');
+    } catch(e) { setOutput('Error de red: ' + e.message, 'err'); }
+  }
+
+  async function checkStatus() {
+    try {
+      const r = await fetch(`${BASE}/status`);
+      const d = await r.json();
+      document.getElementById('dot').className = 'dot green';
+      document.getElementById('status-text').textContent = 'OPERACIONAL';
+      document.getElementById('status-ver').textContent = d.version || '?';
+      const up = Math.floor(d.uptimeSeconds / 60);
+      document.getElementById('status-up').textContent = up + 'm';
+    } catch {
+      document.getElementById('dot').className = 'dot red';
+      document.getElementById('status-text').textContent = 'OFFLINE';
+    }
+  }
+
+  checkStatus();
+  setInterval(checkStatus, 30000);
+</script>
+</body>
+</html>
