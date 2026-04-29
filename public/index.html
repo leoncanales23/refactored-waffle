@@ -1,269 +1,108 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NERHIA · Dashboard</title>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NERHIA · Dashboard Urbano</title>
   <style>
-    :root {
-      --bg: #0a0d14;
-      --panel: #111622;
-      --border: #1e2d4a;
-      --cyan: #00e5ff;
-      --gold: #ffd600;
-      --red: #ff4444;
-      --green: #00e676;
-      --text: #cfd8e3;
-      --muted: #556070;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Courier New', monospace;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 2rem 1rem;
-    }
-    header {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-    header h1 {
-      font-size: 1.8rem;
-      letter-spacing: .3em;
-      color: var(--cyan);
-      text-shadow: 0 0 20px #00e5ff66;
-    }
-    header p { color: var(--muted); font-size: .75rem; margin-top: .4rem; }
-
-    .card {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1.5rem;
-      width: 100%;
-      max-width: 680px;
-      margin-bottom: 1.5rem;
-    }
-    .card h2 {
-      font-size: .7rem;
-      letter-spacing: .2em;
-      color: var(--cyan);
-      margin-bottom: 1rem;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: .5rem;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: .8rem;
-    }
-    label {
-      display: flex;
-      flex-direction: column;
-      gap: .3rem;
-      font-size: .72rem;
-      color: var(--muted);
-      letter-spacing: .1em;
-    }
-    input, select {
-      background: #0d1420;
-      border: 1px solid var(--border);
-      border-radius: 5px;
-      color: var(--text);
-      padding: .45rem .7rem;
-      font-family: inherit;
-      font-size: .85rem;
-      outline: none;
-      transition: border-color .2s;
-    }
-    input:focus, select:focus { border-color: var(--cyan); }
-    .full { grid-column: 1 / -1; }
-
-    .btn-row {
-      display: flex;
-      gap: .8rem;
-      margin-top: 1rem;
-    }
-    button {
-      flex: 1;
-      padding: .6rem 1rem;
-      border: 1px solid var(--cyan);
-      border-radius: 6px;
-      background: transparent;
-      color: var(--cyan);
-      font-family: inherit;
-      font-size: .8rem;
-      letter-spacing: .1em;
-      cursor: pointer;
-      transition: background .2s, box-shadow .2s;
-    }
-    button:hover {
-      background: #00e5ff15;
-      box-shadow: 0 0 12px #00e5ff44;
-    }
-    button.gold {
-      border-color: var(--gold);
-      color: var(--gold);
-    }
-    button.gold:hover {
-      background: #ffd60015;
-      box-shadow: 0 0 12px #ffd60044;
-    }
-
-    .output {
-      min-height: 80px;
-      background: #0d1420;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 1rem;
-      font-size: .82rem;
-      line-height: 1.6;
-      white-space: pre-wrap;
-      word-break: break-word;
-      color: var(--text);
-    }
-    .output.loading { color: var(--muted); }
-    .output.ok      { border-color: var(--green); }
-    .output.err     { border-color: var(--red); color: var(--red); }
-
-    .status-bar {
-      display: flex;
-      gap: 1.5rem;
-      font-size: .72rem;
-      color: var(--muted);
-      letter-spacing: .08em;
-    }
-    .dot {
-      display: inline-block;
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: var(--muted);
-      margin-right: .4rem;
-      vertical-align: middle;
-    }
-    .dot.green { background: var(--green); box-shadow: 0 0 6px var(--green); }
-    .dot.red   { background: var(--red); }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#06040f;--bg2:#0d0a1e;--accent:#b088ff;--dim:rgba(240,235,255,.38);--dimmer:rgba(240,235,255,.18);--green:#00e676;--yellow:#ffc400;--red:#ff4757;--border:rgba(176,136,255,.15)}
+    body{background:linear-gradient(160deg,var(--bg) 0%,var(--bg2) 100%);color:#f0ebff;font-family:'Courier New',monospace;min-height:100vh;padding:32px 24px}
+    header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px;border-bottom:1px solid var(--border);padding-bottom:20px}
+    header h1{font-size:26px;font-weight:700;letter-spacing:-.02em}
+    header .sub{font-size:11px;color:var(--accent);letter-spacing:.24em;margin-bottom:6px}
+    .badge{font-size:10px;padding:4px 10px;border-radius:3px;border:1px solid var(--border);color:var(--dim);display:flex;align-items:center;gap:6px;text-decoration:none}
+    .badge:hover{border-color:var(--accent);color:var(--accent)}
+    .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+    @media(max-width:700px){.grid{grid-template-columns:1fr}}
+    .card{background:rgba(176,136,255,.04);border:1px solid var(--border);border-radius:6px;padding:20px}
+    .card h2{font-size:10px;color:var(--accent);letter-spacing:.22em;margin-bottom:16px}
+    label{display:block;font-size:10px;color:var(--dim);letter-spacing:.1em;margin-bottom:4px}
+    input,select{width:100%;background:rgba(176,136,255,.06);border:1px solid var(--border);border-radius:3px;color:#f0ebff;font-family:inherit;padding:8px 10px;font-size:13px;margin-bottom:12px}
+    .row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .presets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+    .preset-btn{font-size:10px;padding:5px 12px;border-radius:3px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--dim);font-family:inherit;letter-spacing:.08em;transition:all .15s}
+    .preset-btn:hover{border-color:var(--accent);color:var(--accent)}
+    .btn{width:100%;padding:12px;border-radius:4px;cursor:pointer;font-family:inherit;font-size:12px;letter-spacing:.14em;border:none;transition:opacity .2s}
+    .btn-primary{background:var(--accent);color:var(--bg);font-weight:700}
+    .btn-ghost{background:transparent;color:var(--dim);border:1px solid var(--border);margin-top:8px}
+    #result{margin-top:20px;padding:16px;border-radius:4px;border-left:3px solid var(--accent);background:rgba(176,136,255,.05);font-size:13px;line-height:1.8;display:none}
+    .metric-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:10px}
+    .metric-cell{text-align:center}
+    .metric-cell .val{font-size:22px;font-weight:700}
+    .metric-cell .lbl{font-size:9px;color:var(--dim);letter-spacing:.1em;margin-top:2px}
+    .bar-wrap{height:3px;background:rgba(255,255,255,.07);border-radius:2px;margin-top:6px;overflow:hidden}
+    .bar-fill{height:100%;border-radius:2px;transition:width 1s}
+    .history-item{padding:10px 12px;border:1px solid var(--border);border-radius:4px;margin-bottom:8px;cursor:pointer}
+    .history-item:hover{border-color:var(--accent)}
+    .history-item .city{font-size:12px;font-weight:700}
+    .history-item .ts{font-size:9px;color:var(--dimmer);margin-top:2px}
+    .history-item .excerpt{font-size:11px;color:var(--dim);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   </style>
 </head>
 <body>
-
 <header>
-  <h1>◈ NERHIA DASHBOARD</h1>
-  <p>Sistema de Inteligencia Urbana · refactored-waffle</p>
+  <div><div class="sub">◈ NERHIA URBAN INTELLIGENCE</div><h1>Dashboard NERHIA</h1></div>
+  <a class="badge" href="https://github.com/leoncanales23/refactored-waffle/actions" target="_blank">
+    <span class="dot"></span> CI/CD Actions
+  </a>
 </header>
-
-<!-- Status -->
-<div class="card" id="status-card">
-  <h2>▸ ESTADO DEL SISTEMA</h2>
-  <div class="status-bar">
-    <span><span class="dot" id="dot"></span><span id="status-text">Verificando…</span></span>
-    <span>v<span id="status-ver">—</span></span>
-    <span>uptime <span id="status-up">—</span></span>
+<div class="grid">
+  <div>
+    <div class="card">
+      <h2>◈ PARÁMETROS DE ANÁLISIS</h2>
+      <div class="presets">
+        <span style="font-size:10px;color:var(--dim);align-self:center;margin-right:4px;">PRESET →</span>
+        <button class="preset-btn" onclick="applyPreset('buin')">Buin</button>
+        <button class="preset-btn" onclick="applyPreset('stgo')">Santiago</button>
+        <button class="preset-btn" onclick="applyPreset('valpo')">Valparaíso</button>
+        <button class="preset-btn" onclick="applyPreset('conce')">Concepción</button>
+      </div>
+      <div class="row2">
+        <div><label>CIUDAD</label><input type="text" id="city" value="Buin"/></div>
+        <div><label>SEMANA</label><input type="text" id="weekLabel" value="Semana actual"/></div>
+      </div>
+      <div class="row">
+        <div><label>UVX</label><input type="number" id="uvx" value="71"/></div>
+        <div><label>MPI</label><input type="number" id="mpi" value="68"/></div>
+        <div><label>CAI</label><input type="number" id="cai" value="65"/></div>
+      </div>
+      <div class="row">
+        <div><label>IEI</label><input type="number" id="iei" value="63"/></div>
+        <div><label>UEI</label><input type="number" id="uei" value="74"/></div>
+        <div><label>PM10 µg/m³</label><input type="number" id="pm10" value="45"/></div>
+      </div>
+      <label>ESTADO DE ALERTA</label>
+      <select id="alerta"><option>OK</option><option>ALERTA</option><option>CRITICO</option></select>
+      <button class="btn btn-primary" onclick="analyze()">◈ ANALIZAR CON NERHIA</button>
+      <button class="btn btn-ghost" onclick="navigator.clipboard.writeText(JSON.stringify(getParams(),null,2))">{ } Copiar JSON</button>
+    </div>
+    <div id="result">
+      <div style="font-size:9px;color:var(--accent);letter-spacing:.2em;margin-bottom:8px;">◈ ANÁLISIS NERHIA</div>
+      <div class="metric-grid" id="metric-display"></div>
+      <div id="narrative-text"></div>
+    </div>
+  </div>
+  <div>
+    <div class="card" style="height:100%;">
+      <h2>◈ HISTORIAL LOCAL <button onclick="localStorage.removeItem('nerhia_history');renderHistory()" style="font-size:9px;padding:3px 8px;border:1px solid var(--border);background:transparent;color:var(--dim);cursor:pointer;font-family:inherit;border-radius:2px;float:right">LIMPIAR</button></h2>
+      <div id="history-list"></div>
+    </div>
   </div>
 </div>
-
-<!-- Formulario -->
-<div class="card">
-  <h2>▸ PARÁMETROS URBANOS</h2>
-  <div class="grid">
-    <label class="full">CIUDAD
-      <input id="city" type="text" value="Buin" />
-    </label>
-    <label class="full">ETIQUETA DE SEMANA
-      <input id="weekLabel" type="text" value="Semana actual" />
-    </label>
-    <label>UVX <input id="uvx" type="number" value="71" min="0" max="200" /></label>
-    <label>MPI <input id="mpi" type="number" value="68" min="0" max="200" /></label>
-    <label>CAI <input id="cai" type="number" value="65" min="0" max="200" /></label>
-    <label>IEI <input id="iei" type="number" value="63" min="0" max="200" /></label>
-    <label>UEI <input id="uei" type="number" value="74" min="0" max="200" /></label>
-    <label>PM10 (µg/m³) <input id="pm10" type="number" value="45" min="0" max="600" /></label>
-    <label class="full">ALERTA
-      <select id="alerta">
-        <option value="OK">OK</option>
-        <option value="ALERTA">ALERTA</option>
-        <option value="CRITICO">CRITICO</option>
-      </select>
-    </label>
-  </div>
-  <div class="btn-row">
-    <button onclick="callNarrative()">◈ GENERAR NARRATIVA</button>
-    <button class="gold" onclick="callPreview()">▷ VER PROPS</button>
-  </div>
-</div>
-
-<!-- Output -->
-<div class="card">
-  <h2>▸ RESPUESTA</h2>
-  <div class="output" id="output">Esperando consulta…</div>
-</div>
-
 <script>
-  const BASE = window.location.origin;
-
-  function params() {
-    return new URLSearchParams({
-      city:      document.getElementById('city').value,
-      weekLabel: document.getElementById('weekLabel').value,
-      uvx:  document.getElementById('uvx').value,
-      mpi:  document.getElementById('mpi').value,
-      cai:  document.getElementById('cai').value,
-      iei:  document.getElementById('iei').value,
-      uei:  document.getElementById('uei').value,
-      pm10: document.getElementById('pm10').value,
-      alerta: document.getElementById('alerta').value,
-    }).toString();
-  }
-
-  function setOutput(text, state = '') {
-    const el = document.getElementById('output');
-    el.className = 'output' + (state ? ' ' + state : '');
-    el.textContent = text;
-  }
-
-  async function callNarrative() {
-    setOutput('Generando narrativa con Claude…', 'loading');
-    try {
-      const r = await fetch(`${BASE}/narrative?${params()}`);
-      const d = await r.json();
-      if (d.ok) {
-        setOutput(`[${d.city} · ${d.weekLabel}]\n\n${d.narrative}`, 'ok');
-      } else {
-        setOutput('Error: ' + d.error, 'err');
-      }
-    } catch(e) { setOutput('Error de red: ' + e.message, 'err'); }
-  }
-
-  async function callPreview() {
-    setOutput('Consultando props del video…', 'loading');
-    try {
-      const r = await fetch(`${BASE}/preview?${params()}`);
-      const d = await r.json();
-      setOutput(JSON.stringify(d, null, 2), 'ok');
-    } catch(e) { setOutput('Error de red: ' + e.message, 'err'); }
-  }
-
-  async function checkStatus() {
-    try {
-      const r = await fetch(`${BASE}/status`);
-      const d = await r.json();
-      document.getElementById('dot').className = 'dot green';
-      document.getElementById('status-text').textContent = 'OPERACIONAL';
-      document.getElementById('status-ver').textContent = d.version || '?';
-      const up = Math.floor(d.uptimeSeconds / 60);
-      document.getElementById('status-up').textContent = up + 'm';
-    } catch {
-      document.getElementById('dot').className = 'dot red';
-      document.getElementById('status-text').textContent = 'OFFLINE';
-    }
-  }
-
-  checkStatus();
-  setInterval(checkStatus, 30000);
+  const PRESETS={buin:{city:'Buin',weekLabel:'Semana 20',uvx:71,mpi:68,cai:65,iei:63,uei:74,pm10:45,alerta:'OK'},stgo:{city:'Santiago',weekLabel:'Semana 20',uvx:82,mpi:54,cai:72,iei:58,uei:61,pm10:78,alerta:'ALERTA'},valpo:{city:'Valparaíso',weekLabel:'Semana 20',uvx:63,mpi:71,cai:58,iei:74,uei:68,pm10:32,alerta:'OK'},conce:{city:'Concepción',weekLabel:'Semana 20',uvx:55,mpi:62,cai:48,iei:66,uei:57,pm10:90,alerta:'CRITICO'}};
+  const COLORS={uvx:'#b088ff',mpi:'#00d4ff',cai:'#9c88ff',iei:'#ffc400',uei:'#00e676'};
+  function applyPreset(k){const p=PRESETS[k];Object.keys(p).forEach(key=>{const el=document.getElementById(key);if(el)el.value=p[key];})}
+  function getParams(){return{city:v('city'),weekLabel:v('weekLabel'),uvx:v('uvx'),mpi:v('mpi'),cai:v('cai'),iei:v('iei'),uei:v('uei'),pm10:v('pm10'),alerta:v('alerta')};}
+  function v(id){return document.getElementById(id).value;}
+  async function analyze(){const btn=document.querySelector('.btn-primary');btn.textContent='◈ ANALIZANDO...';btn.disabled=true;const p=getParams();try{const res=await fetch('/narrative?'+new URLSearchParams(p));const data=await res.json();showResult(p,data.narrative);save(p,data.narrative);}catch(e){showResult(p,'⚠ Error conectando con NERHIA API.');}finally{btn.textContent='◈ ANALIZAR CON NERHIA';btn.disabled=false;}}
+  function showResult(p,narrative){const r=document.getElementById('result');r.style.display='block';const metrics=[{label:'UVX',val:p.uvx,color:COLORS.uvx},{label:'MPI',val:p.mpi,color:COLORS.mpi},{label:'CAI',val:p.cai,color:COLORS.cai},{label:'IEI',val:p.iei,color:COLORS.iei},{label:'UEI',val:p.uei,color:COLORS.uei}];document.getElementById('metric-display').innerHTML=metrics.map(m=>`<div class="metric-cell"><div class="val" style="color:${m.color}">${m.val}</div><div class="lbl">${m.label}</div><div class="bar-wrap"><div class="bar-fill" style="width:${Math.min(m.val,100)}%;background:${m.color}"></div></div></div>`).join('');document.getElementById('narrative-text').textContent=narrative;}
+  function save(p,narrative){const h=JSON.parse(localStorage.getItem('nerhia_history')||'[]');h.unshift({params:p,narrative,ts:new Date().toLocaleString()});if(h.length>5)h.pop();localStorage.setItem('nerhia_history',JSON.stringify(h));renderHistory();}
+  function renderHistory(){const h=JSON.parse(localStorage.getItem('nerhia_history')||'[]');const el=document.getElementById('history-list');el.innerHTML=h.length?h.map((item,i)=>`<div class="history-item" onclick="loadH(${i})"><div class="city">${item.params.city} — ${item.params.weekLabel}</div><div class="ts">${item.ts}</div><div class="excerpt">${item.narrative}</div></div>`).join(''):'<div style="font-size:11px;color:var(--dimmer);text-align:center;padding:20px 0">Sin análisis aún.</div>';}
+  function loadH(i){const h=JSON.parse(localStorage.getItem('nerhia_history')||'[]');if(!h[i])return;Object.keys(h[i].params).forEach(k=>{const el=document.getElementById(k);if(el)el.value=h[i].params[k];});showResult(h[i].params,h[i].narrative);}
+  renderHistory();
 </script>
-</body>
-</html>
+</body></html>
