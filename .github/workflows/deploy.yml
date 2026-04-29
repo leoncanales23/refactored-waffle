@@ -1,0 +1,56 @@
+name: 🧇 NERHIA — Deploy to Cloud Run
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  SERVICE_NAME: nerhia-api
+  REGION: us-central1
+  PORT: 8090
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔐 Autenticar en GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: ☁️ Configurar gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: 🐳 Deploy a Cloud Run
+        run: |
+          gcloud run deploy $SERVICE_NAME \
+            --source . \
+            --project ${{ secrets.GCP_PROJECT_ID }} \
+            --region $REGION \
+            --platform managed \
+            --allow-unauthenticated \
+            --port $PORT \
+            --memory 1Gi \
+            --cpu 1 \
+            --timeout 300 \
+            --set-env-vars "ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}" \
+            --quiet
+
+      - name: 🔗 URL + Health-check
+        run: |
+          URL=$(gcloud run services describe $SERVICE_NAME \
+            --project ${{ secrets.GCP_PROJECT_ID }} \
+            --region $REGION \
+            --format 'value(status.url)')
+          echo "## ✅ Deploy exitoso — $URL" >> $GITHUB_STEP_SUMMARY
+          sleep 5
+          HTTP=$(curl -s -o /dev/null -w "%{http_code}" "$URL/status")
+          [ "$HTTP" = "200" ] && echo "✅ API saludable" || echo "⚠️ HTTP $HTTP"
