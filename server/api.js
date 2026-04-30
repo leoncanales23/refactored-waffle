@@ -1,20 +1,19 @@
 "use strict";
-const express   = require("express");
-const cors      = require("cors");
-const path      = require("path");
-const Anthropic  = require("@anthropic-ai/sdk").default;
+const express  = require("express");
+const cors     = require("cors");
+const path     = require("path");
+const os       = require("os");
+const fs       = require("fs");
+const Anthropic = require("@anthropic-ai/sdk").default;
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-
-// Servir dashboard estático desde /public
 app.use(express.static(path.join(__dirname, "../public")));
 
-const PORT      = process.env.PORT || 8090;
-const VERSION   = "0.3.0";
-const STARTED   = Date.now();
-
+const PORT    = process.env.PORT || 8090;
+const VERSION = "0.4.0";
+const STARTED = Date.now();
 const ts = () => new Date().toISOString();
 
 /* ── Helpers ── */
@@ -22,20 +21,18 @@ function parseMetrics(body = {}) {
   return {
     city:      typeof body.city      === "string" ? body.city.trim()      : "Buin",
     weekLabel: typeof body.weekLabel === "string" ? body.weekLabel.trim() : "Semana actual",
-    uvx:  clampMetric(body.uvx,  71),
-    mpi:  clampMetric(body.mpi,  68),
-    cai:  clampMetric(body.cai,  65),
-    iei:  clampMetric(body.iei,  63),
-    uei:  clampMetric(body.uei,  74),
-    pm10: clampMetric(body.pm10, 45, 0, 600),
-    alerta: ["OK", "ALERTA", "CRITICO"].includes(body.alerta) ? body.alerta : "OK",
+    uvx:  clamp(body.uvx,  71),
+    mpi:  clamp(body.mpi,  68),
+    cai:  clamp(body.cai,  65),
+    iei:  clamp(body.iei,  63),
+    uei:  clamp(body.uei,  74),
+    pm10: clamp(body.pm10, 45, 0, 600),
+    alerta: ["OK","ALERTA","CRITICO"].includes(body.alerta) ? body.alerta : "OK",
   };
 }
-
-function clampMetric(val, def, min = 0, max = 200) {
+function clamp(val, def, min=0, max=200) {
   const n = parseFloat(val);
-  if (isNaN(n)) return def;
-  return Math.min(Math.max(n, min), max);
+  return isNaN(n) ? def : Math.min(Math.max(n, min), max);
 }
 
 /* ── Claude narrative ── */
@@ -47,43 +44,35 @@ async function generateNarrative(data) {
       max_tokens: 220,
       messages: [{ role: "user", content:
         `Eres NERHIA, el sistema de inteligencia urbana de ${data.city}. ` +
-        `Genera un párrafo técnico (máx 3 oraciones, máx 220 tokens) resumiendo la semana urbana: ` +
+        `Genera un párrafo técnico (máx 3 oraciones) resumiendo la semana urbana: ` +
         `UVX=${data.uvx}, MPI=${data.mpi}, CAI=${data.cai}, IEI=${data.iei}, UEI=${data.uei}, ` +
         `PM10=${data.pm10} µg/m³, Alerta=${data.alerta}, Semana=${data.weekLabel}. ` +
         `Tono: analítico, conciso. Sin saludos.`
       }]
     });
     return r.content[0].text.trim();
-  } catch (e) {
+  } catch(e) {
     console.error(`[${ts()}][NERHIA] Claude error:`, e.message);
-    return `Semana operacional en ${data.city}. Índices dentro del rango nominal. Sistema NERHIA activo.`;
+    return `Semana operacional en ${data.city}. Índices dentro del rango nominal.`;
   }
 }
 
 /* ── GET /status ── */
-app.get("/status", (_req, res) => {
-  res.json({
-    ok: true,
-    service: "refactored-waffle",
-    version: VERSION,
-    uptimeSeconds: Math.floor((Date.now() - STARTED) / 1000),
-    timestamp: ts(),
-  });
-});
+app.get("/status", (_req, res) => res.json({
+  ok: true, service: "refactored-waffle", version: VERSION,
+  uptimeSeconds: Math.floor((Date.now()-STARTED)/1000), timestamp: ts()
+}));
 
-/* ── GET /health (alias legacy) ── */
-app.get("/health", (_req, res) => {
-  res.json({ ok: true, service: "refactored-waffle", version: VERSION });
-});
+/* ── GET /health ── */
+app.get("/health", (_req, res) => res.json({ ok: true, version: VERSION }));
 
 /* ── GET /narrative ── */
 app.get("/narrative", async (req, res) => {
   const data = parseMetrics(req.query);
-  console.log(`[${ts()}][narrative] ${data.city} / ${data.weekLabel}`);
   try {
     const narrative = await generateNarrative(data);
     res.json({ ok: true, city: data.city, weekLabel: data.weekLabel, narrative });
-  } catch (err) {
+  } catch(err) {
     res.status(500).json({ ok: false, error: err.message });
   }
 });
@@ -94,41 +83,69 @@ app.get("/preview", (req, res) => {
   res.json({ ok: true, composition: "NERHIAReport", props: data });
 });
 
-/* ── POST /render ── */
+/* ── POST /render ── ── ── ── ── NUEVO: render real ── */
 app.post("/render", async (req, res) => {
   const data = parseMetrics(req.body);
-  console.log(`[${ts()}][render] Iniciando para ${data.city}…`);
+  const jobId = `nerhia-${Date.now()}`;
+  console.log(`[${ts()}][render] Iniciando job ${jobId} para ${data.city}…`);
 
   try {
-    const { bundle }   = require("@remotion/bundler");
-    const { renderMedia, selectComposition } = require("@remotion/renderer");
-    const os = require("os");
-    const fs = require("fs");
-
+    // 1. Generar narrativa con Claude
     const narrative = await generateNarrative(data);
-    data.narrative  = narrative;
+    const inputProps = { ...data, narrative };
+    console.log(`[${ts()}][render] Narrativa generada ✓`);
 
-    const bundleDir = await bundle({
-      entryPoint: path.join(__dirname, "../src/index.ts")
+    // 2. Bundle de Remotion (se cachea tras el primer uso)
+    const { bundle } = require("@remotion/bundler");
+    const bundlePath = await bundle({
+      entryPoint: path.join(__dirname, "../src/index.ts"),
+      outDir: path.join(os.tmpdir(), "remotion-bundle"),
     });
+    console.log(`[${ts()}][render] Bundle listo ✓`);
 
-    const comp = await selectComposition({
-      serveUrl: bundleDir, id: "NERHIAReport", inputProps: data
+    // 3. Seleccionar composición
+    const { selectComposition, renderMedia } = require("@remotion/renderer");
+    const composition = await selectComposition({
+      serveUrl: bundlePath,
+      id: "NERHIAReport",
+      inputProps,
     });
+    console.log(`[${ts()}][render] Composición seleccionada: ${composition.id} (${composition.durationInFrames} frames) ✓`);
 
-    const outPath = path.join(os.tmpdir(), `nerhia-${Date.now()}.mp4`);
+    // 4. Renderizar a MP4
+    const outPath = path.join(os.tmpdir(), `${jobId}.mp4`);
     await renderMedia({
-      composition: comp, serveUrl: bundleDir,
-      codec: "h264", outputLocation: outPath, inputProps: data
+      composition,
+      serveUrl: bundlePath,
+      codec: "h264",
+      outputLocation: outPath,
+      inputProps,
+      chromiumOptions: {
+        // Usar el Chromium instalado en el contenedor
+        executablePath: process.env.CHROMIUM_PATH || "/usr/bin/chromium",
+        disableWebSecurity: true,
+      },
+      onProgress: ({ progress }) => {
+        if (Math.round(progress * 100) % 20 === 0) {
+          console.log(`[${ts()}][render] Progreso: ${Math.round(progress * 100)}%`);
+        }
+      },
+    });
+    console.log(`[${ts()}][render] MP4 generado → ${outPath} ✓`);
+
+    // 5. Enviar archivo y limpiar
+    res.setHeader("Content-Type", "video/mp4");
+    res.setHeader("Content-Disposition", `attachment; filename="nerhia-${data.city}-${data.weekLabel}.mp4"`);
+    const stream = fs.createReadStream(outPath);
+    stream.pipe(res);
+    stream.on("end", () => {
+      try { fs.unlinkSync(outPath); } catch(_) {}
+      console.log(`[${ts()}][render] Entregado y limpiado ✓`);
     });
 
-    console.log(`[${ts()}][render] Listo → ${outPath}`);
-    res.download(outPath, "nerhia-report.mp4", () => {
-      try { fs.unlinkSync(outPath); } catch (_) {}
-    });
-  } catch (err) {
+  } catch(err) {
     console.error(`[${ts()}][render] Error:`, err.message);
-    res.status(500).json({ ok: false, error: err.message });
+    res.status(500).json({ ok: false, error: err.message, jobId });
   }
 });
 
