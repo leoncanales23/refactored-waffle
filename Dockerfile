@@ -17,5 +17,8 @@ COPY src ./src
 COPY server ./server
 COPY public ./public
 
+COPY entrypoint.sh /app/
+RUN chmod +x /app/entrypoint.sh
+
 EXPOSE 8090
-CMD ["node", "server/api.js"]
+CMD ["/app/entrypoint.sh"]
