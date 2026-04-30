@@ -1,108 +1,104 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NERHIA · Dashboard Urbano</title>
-  <style>
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    :root{--bg:#06040f;--bg2:#0d0a1e;--accent:#b088ff;--dim:rgba(240,235,255,.38);--dimmer:rgba(240,235,255,.18);--green:#00e676;--yellow:#ffc400;--red:#ff4757;--border:rgba(176,136,255,.15)}
-    body{background:linear-gradient(160deg,var(--bg) 0%,var(--bg2) 100%);color:#f0ebff;font-family:'Courier New',monospace;min-height:100vh;padding:32px 24px}
-    header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px;border-bottom:1px solid var(--border);padding-bottom:20px}
-    header h1{font-size:26px;font-weight:700;letter-spacing:-.02em}
-    header .sub{font-size:11px;color:var(--accent);letter-spacing:.24em;margin-bottom:6px}
-    .badge{font-size:10px;padding:4px 10px;border-radius:3px;border:1px solid var(--border);color:var(--dim);display:flex;align-items:center;gap:6px;text-decoration:none}
-    .badge:hover{border-color:var(--accent);color:var(--accent)}
-    .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 2s infinite}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-    @media(max-width:700px){.grid{grid-template-columns:1fr}}
-    .card{background:rgba(176,136,255,.04);border:1px solid var(--border);border-radius:6px;padding:20px}
-    .card h2{font-size:10px;color:var(--accent);letter-spacing:.22em;margin-bottom:16px}
-    label{display:block;font-size:10px;color:var(--dim);letter-spacing:.1em;margin-bottom:4px}
-    input,select{width:100%;background:rgba(176,136,255,.06);border:1px solid var(--border);border-radius:3px;color:#f0ebff;font-family:inherit;padding:8px 10px;font-size:13px;margin-bottom:12px}
-    .row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-    .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .presets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
-    .preset-btn{font-size:10px;padding:5px 12px;border-radius:3px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--dim);font-family:inherit;letter-spacing:.08em;transition:all .15s}
-    .preset-btn:hover{border-color:var(--accent);color:var(--accent)}
-    .btn{width:100%;padding:12px;border-radius:4px;cursor:pointer;font-family:inherit;font-size:12px;letter-spacing:.14em;border:none;transition:opacity .2s}
-    .btn-primary{background:var(--accent);color:var(--bg);font-weight:700}
-    .btn-ghost{background:transparent;color:var(--dim);border:1px solid var(--border);margin-top:8px}
-    #result{margin-top:20px;padding:16px;border-radius:4px;border-left:3px solid var(--accent);background:rgba(176,136,255,.05);font-size:13px;line-height:1.8;display:none}
-    .metric-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:10px}
-    .metric-cell{text-align:center}
-    .metric-cell .val{font-size:22px;font-weight:700}
-    .metric-cell .lbl{font-size:9px;color:var(--dim);letter-spacing:.1em;margin-top:2px}
-    .bar-wrap{height:3px;background:rgba(255,255,255,.07);border-radius:2px;margin-top:6px;overflow:hidden}
-    .bar-fill{height:100%;border-radius:2px;transition:width 1s}
-    .history-item{padding:10px 12px;border:1px solid var(--border);border-radius:4px;margin-bottom:8px;cursor:pointer}
-    .history-item:hover{border-color:var(--accent)}
-    .history-item .city{font-size:12px;font-weight:700}
-    .history-item .ts{font-size:9px;color:var(--dimmer);margin-top:2px}
-    .history-item .excerpt{font-size:11px;color:var(--dim);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>NERHIA Dashboard v3</title>
+<style>
+  :root{--bg:#0a0e1a;--card:#111827;--border:#1e2d40;--accent:#00d4ff;--green:#00ff88;--red:#ff4444;--yellow:#ffd700;--text:#e2e8f0;--muted:#64748b}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'Courier New',monospace;min-height:100vh;padding:20px}
+  h1{text-align:center;color:var(--accent);font-size:1.5rem;margin-bottom:4px;letter-spacing:4px}
+  .sub{text-align:center;color:var(--muted);font-size:.75rem;margin-bottom:24px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:960px;margin:0 auto}
+  @media(max-width:600px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px}
+  .card h2{font-size:.85rem;color:var(--accent);margin-bottom:12px;letter-spacing:2px}
+  label{display:block;font-size:.75rem;color:var(--muted);margin:8px 0 3px}
+  input,select{width:100%;background:#0d1117;border:1px solid var(--border);color:var(--text);padding:8px;border-radius:4px;font-family:inherit;font-size:.85rem}
+  .presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  .preset{padding:4px 10px;font-size:.72rem;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:4px;cursor:pointer;font-family:inherit}
+  .preset:hover{border-color:var(--accent);color:var(--accent)}
+  .btn{width:100%;padding:10px;margin-top:12px;background:var(--accent);color:#000;border:none;border-radius:4px;cursor:pointer;font-family:inherit;font-size:.85rem;font-weight:bold;letter-spacing:2px}
+  .btn:hover{opacity:.85}
+  .btn.secondary{background:transparent;border:1px solid var(--accent);color:var(--accent);margin-top:6px}
+  .status-bar{display:flex;justify-content:space-between;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:8px 14px;max-width:960px;margin:0 auto 16px;font-size:.75rem}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:6px;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .tag{padding:2px 8px;border-radius:10px;font-size:.7rem;font-weight:bold}
+  .tag.pending{background:#ffd70022;color:var(--yellow)}
+  .tag.running{background:#00d4ff22;color:var(--accent)}
+  .tag.done{background:#00ff8822;color:var(--green)}
+  .tag.failed{background:#ff444422;color:var(--red)}
+  .job-list{max-height:260px;overflow-y:auto}
+  .job-item{padding:8px 10px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:.75rem;cursor:pointer}
+  .job-item:hover{background:#ffffff08}
+  .narrative-box{background:#0d1117;border:1px solid var(--border);border-radius:4px;padding:10px;font-size:.8rem;min-height:60px;color:var(--text);white-space:pre-wrap;margin-top:8px}
+  .progress{width:100%;height:4px;background:var(--border);border-radius:2px;margin-top:8px;overflow:hidden}
+  .progress-bar{height:100%;background:var(--accent);width:0%;transition:width .5s;border-radius:2px}
+  #toast{position:fixed;bottom:20px;right:20px;background:var(--card);border:1px solid var(--accent);padding:10px 16px;border-radius:6px;font-size:.8rem;display:none;z-index:999}
+</style>
 </head>
 <body>
-<header>
-  <div><div class="sub">◈ NERHIA URBAN INTELLIGENCE</div><h1>Dashboard NERHIA</h1></div>
-  <a class="badge" href="https://github.com/leoncanales23/refactored-waffle/actions" target="_blank">
-    <span class="dot"></span> CI/CD Actions
-  </a>
-</header>
+<h1>◈ NERHIA DASHBOARD</h1>
+<p class="sub">Sistema de Reporte Holístico de Análisis Ambiental v3.0 — Cola de Renders</p>
+<div class="status-bar">
+  <span><span class="dot"></span><span id="srv-status">Conectando...</span></span>
+  <span>Queue: <b id="q-pending">-</b> pendientes · <b id="q-done">-</b> completados</span>
+  <span>Uptime: <b id="uptime">-</b></span>
+</div>
 <div class="grid">
   <div>
     <div class="card">
-      <h2>◈ PARÁMETROS DE ANÁLISIS</h2>
+      <h2>◈ MÉTRICAS AMBIENTALES</h2>
       <div class="presets">
-        <span style="font-size:10px;color:var(--dim);align-self:center;margin-right:4px;">PRESET →</span>
-        <button class="preset-btn" onclick="applyPreset('buin')">Buin</button>
-        <button class="preset-btn" onclick="applyPreset('stgo')">Santiago</button>
-        <button class="preset-btn" onclick="applyPreset('valpo')">Valparaíso</button>
-        <button class="preset-btn" onclick="applyPreset('conce')">Concepción</button>
+        <button class="preset" onclick="loadPreset('cdmx')">CDMX</button>
+        <button class="preset" onclick="loadPreset('mty')">Monterrey</button>
+        <button class="preset" onclick="loadPreset('gdl')">Guadalajara</button>
+        <button class="preset" onclick="loadPreset('tij')">Tijuana</button>
+        <button class="preset" onclick="loadPreset('random')">◈ Random</button>
       </div>
-      <div class="row2">
-        <div><label>CIUDAD</label><input type="text" id="city" value="Buin"/></div>
-        <div><label>SEMANA</label><input type="text" id="weekLabel" value="Semana actual"/></div>
-      </div>
-      <div class="row">
-        <div><label>UVX</label><input type="number" id="uvx" value="71"/></div>
-        <div><label>MPI</label><input type="number" id="mpi" value="68"/></div>
-        <div><label>CAI</label><input type="number" id="cai" value="65"/></div>
-      </div>
-      <div class="row">
-        <div><label>IEI</label><input type="number" id="iei" value="63"/></div>
-        <div><label>UEI</label><input type="number" id="uei" value="74"/></div>
-        <div><label>PM10 µg/m³</label><input type="number" id="pm10" value="45"/></div>
-      </div>
-      <label>ESTADO DE ALERTA</label>
-      <select id="alerta"><option>OK</option><option>ALERTA</option><option>CRITICO</option></select>
-      <button class="btn btn-primary" onclick="analyze()">◈ ANALIZAR CON NERHIA</button>
-      <button class="btn btn-ghost" onclick="navigator.clipboard.writeText(JSON.stringify(getParams(),null,2))">{ } Copiar JSON</button>
-    </div>
-    <div id="result">
-      <div style="font-size:9px;color:var(--accent);letter-spacing:.2em;margin-bottom:8px;">◈ ANÁLISIS NERHIA</div>
-      <div class="metric-grid" id="metric-display"></div>
-      <div id="narrative-text"></div>
+      <label>Ubicación</label><input id="location" value="Ciudad de México"/>
+      <label>PM2.5 (μg/m³)</label><input id="pm25" type="number" value="45"/>
+      <label>NO₂ (μg/m³)</label><input id="no2" type="number" value="30"/>
+      <label>CO₂ (ppm)</label><input id="co2" type="number" value="800"/>
+      <label>Temperatura (°C)</label><input id="temperatura" type="number" value="22"/>
+      <label>Humedad (%)</label><input id="humedad" type="number" value="65"/>
+      <label>Email de notificación (opcional)</label><input id="notifyEmail" type="email" placeholder="tu@email.com"/>
+      <label>Webhook URL (opcional)</label><input id="webhookUrl" type="url" placeholder="https://tu-webhook.com/hook"/>
+      <button class="btn" onclick="enqueueRender()">◈ ENCOLAR RENDER</button>
+      <button class="btn secondary" onclick="getNarrative()">◈ SOLO NARRATIVA</button>
     </div>
   </div>
-  <div>
-    <div class="card" style="height:100%;">
-      <h2>◈ HISTORIAL LOCAL <button onclick="localStorage.removeItem('nerhia_history');renderHistory()" style="font-size:9px;padding:3px 8px;border:1px solid var(--border);background:transparent;color:var(--dim);cursor:pointer;font-family:inherit;border-radius:2px;float:right">LIMPIAR</button></h2>
-      <div id="history-list"></div>
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div class="card">
+      <h2>◈ COLA DE RENDERS</h2>
+      <div class="job-list" id="job-list"><div style="color:var(--muted);font-size:.75rem;padding:10px">Sin jobs aún...</div></div>
+      <div class="progress"><div class="progress-bar" id="progress-bar"></div></div>
+    </div>
+    <div class="card"><h2>◈ NARRATIVA CLAUDE</h2><div class="narrative-box" id="narrative-box">La narrativa aparecerá aquí...</div></div>
+    <div class="card">
+      <h2>◈ DETALLE JOB</h2>
+      <div class="narrative-box" id="job-detail" style="font-size:.72rem">Haz clic en un job para ver detalles...</div>
+      <button class="btn secondary" id="dl-btn" style="display:none" onclick="downloadVideo()">⬇ DESCARGAR VIDEO</button>
     </div>
   </div>
 </div>
+<div id="toast"></div>
 <script>
-  const PRESETS={buin:{city:'Buin',weekLabel:'Semana 20',uvx:71,mpi:68,cai:65,iei:63,uei:74,pm10:45,alerta:'OK'},stgo:{city:'Santiago',weekLabel:'Semana 20',uvx:82,mpi:54,cai:72,iei:58,uei:61,pm10:78,alerta:'ALERTA'},valpo:{city:'Valparaíso',weekLabel:'Semana 20',uvx:63,mpi:71,cai:58,iei:74,uei:68,pm10:32,alerta:'OK'},conce:{city:'Concepción',weekLabel:'Semana 20',uvx:55,mpi:62,cai:48,iei:66,uei:57,pm10:90,alerta:'CRITICO'}};
-  const COLORS={uvx:'#b088ff',mpi:'#00d4ff',cai:'#9c88ff',iei:'#ffc400',uei:'#00e676'};
-  function applyPreset(k){const p=PRESETS[k];Object.keys(p).forEach(key=>{const el=document.getElementById(key);if(el)el.value=p[key];})}
-  function getParams(){return{city:v('city'),weekLabel:v('weekLabel'),uvx:v('uvx'),mpi:v('mpi'),cai:v('cai'),iei:v('iei'),uei:v('uei'),pm10:v('pm10'),alerta:v('alerta')};}
-  function v(id){return document.getElementById(id).value;}
-  async function analyze(){const btn=document.querySelector('.btn-primary');btn.textContent='◈ ANALIZANDO...';btn.disabled=true;const p=getParams();try{const res=await fetch('/narrative?'+new URLSearchParams(p));const data=await res.json();showResult(p,data.narrative);save(p,data.narrative);}catch(e){showResult(p,'⚠ Error conectando con NERHIA API.');}finally{btn.textContent='◈ ANALIZAR CON NERHIA';btn.disabled=false;}}
-  function showResult(p,narrative){const r=document.getElementById('result');r.style.display='block';const metrics=[{label:'UVX',val:p.uvx,color:COLORS.uvx},{label:'MPI',val:p.mpi,color:COLORS.mpi},{label:'CAI',val:p.cai,color:COLORS.cai},{label:'IEI',val:p.iei,color:COLORS.iei},{label:'UEI',val:p.uei,color:COLORS.uei}];document.getElementById('metric-display').innerHTML=metrics.map(m=>`<div class="metric-cell"><div class="val" style="color:${m.color}">${m.val}</div><div class="lbl">${m.label}</div><div class="bar-wrap"><div class="bar-fill" style="width:${Math.min(m.val,100)}%;background:${m.color}"></div></div></div>`).join('');document.getElementById('narrative-text').textContent=narrative;}
-  function save(p,narrative){const h=JSON.parse(localStorage.getItem('nerhia_history')||'[]');h.unshift({params:p,narrative,ts:new Date().toLocaleString()});if(h.length>5)h.pop();localStorage.setItem('nerhia_history',JSON.stringify(h));renderHistory();}
-  function renderHistory(){const h=JSON.parse(localStorage.getItem('nerhia_history')||'[]');const el=document.getElementById('history-list');el.innerHTML=h.length?h.map((item,i)=>`<div class="history-item" onclick="loadH(${i})"><div class="city">${item.params.city} — ${item.params.weekLabel}</div><div class="ts">${item.ts}</div><div class="excerpt">${item.narrative}</div></div>`).join(''):'<div style="font-size:11px;color:var(--dimmer);text-align:center;padding:20px 0">Sin análisis aún.</div>';}
-  function loadH(i){const h=JSON.parse(localStorage.getItem('nerhia_history')||'[]');if(!h[i])return;Object.keys(h[i].params).forEach(k=>{const el=document.getElementById(k);if(el)el.value=h[i].params[k];});showResult(h[i].params,h[i].narrative);}
-  renderHistory();
+const PRESETS={cdmx:{location:'Ciudad de México',pm25:145,no2:85,co2:1200,temperatura:18,humedad:60},mty:{location:'Monterrey',pm25:90,no2:65,co2:950,temperatura:28,humedad:45},gdl:{location:'Guadalajara',pm25:60,no2:40,co2:750,temperatura:24,humedad:55},tij:{location:'Tijuana',pm25:35,no2:25,co2:600,temperatura:20,humedad:70},random:{location:'Ciudad X',pm25:0,no2:0,co2:0,temperatura:0,humedad:0}};
+let selectedJobId=null;
+function loadPreset(k){const p={...PRESETS[k]};if(k==='random'){p.pm25=Math.random()*200|0;p.no2=Math.random()*150|0;p.co2=400+Math.random()*2000|0;p.temperatura=10+Math.random()*35|0;p.humedad=Math.random()*100|0;}Object.entries(p).forEach(([k,v])=>{const el=document.getElementById(k);if(el)el.value=v;});}
+function getMetrics(){return{pm25:+document.getElementById('pm25').value,no2:+document.getElementById('no2').value,co2:+document.getElementById('co2').value,temperatura:+document.getElementById('temperatura').value,humedad:+document.getElementById('humedad').value,location:document.getElementById('location').value,webhookUrl:document.getElementById('webhookUrl').value||undefined,notifyEmail:document.getElementById('notifyEmail').value||undefined};}
+function toast(msg,color='var(--accent)'){const t=document.getElementById('toast');t.textContent=msg;t.style.borderColor=color;t.style.display='block';setTimeout(()=>t.style.display='none',3000);}
+async function enqueueRender(){try{const res=await fetch('/render/enqueue',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(getMetrics())});const data=await res.json();toast('✅ Job encolado: '+data.job.id);loadJobs();pollJob(data.job.id);}catch(e){toast('❌ Error: '+e.message,'var(--red)');}}
+async function getNarrative(){document.getElementById('narrative-box').textContent='Generando...';try{const res=await fetch('/narrative',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(getMetrics())});const data=await res.json();document.getElementById('narrative-box').textContent=data.narrative||'Sin respuesta';}catch(e){document.getElementById('narrative-box').textContent='Error: '+e.message;}}
+async function loadJobs(){try{const res=await fetch('/render/jobs?limit=10');const jobs=await res.json();const list=document.getElementById('job-list');if(!jobs.length){list.innerHTML='<div style="color:var(--muted);font-size:.75rem;padding:10px">Sin jobs aún...</div>';return;}list.innerHTML=jobs.map(j=>`<div class="job-item" onclick="showJob('${j.id}')"><span>${j.id.slice(0,20)}…</span><span class="tag ${j.status}">${j.status.toUpperCase()}</span></div>`).join('');}catch(_){}}
+function showJob(id){selectedJobId=id;fetch('/render/status/'+id).then(r=>r.json()).then(job=>{document.getElementById('job-detail').textContent=JSON.stringify(job,null,2);document.getElementById('dl-btn').style.display=job.status==='done'?'block':'none';});}
+function downloadVideo(){if(selectedJobId)window.open('/render/download/'+selectedJobId);}
+function pollJob(id){const interval=setInterval(async()=>{try{const res=await fetch('/render/status/'+id);const job=await res.json();if(job.status==='done'){toast('🎬 Render completado!','var(--green)');clearInterval(interval);loadJobs();}else if(job.status==='failed'){toast('❌ Render falló','var(--red)');clearInterval(interval);loadJobs();}}catch(_){clearInterval(interval);}},3000);}
+async function updateStatus(){try{const res=await fetch('/status');const d=await res.json();document.getElementById('srv-status').textContent='API v'+d.version+' activa';document.getElementById('q-pending').textContent=d.queue.pending;document.getElementById('q-done').textContent=d.queue.done;document.getElementById('uptime').textContent=d.uptime+'s';const total=d.queue.total||1;document.getElementById('progress-bar').style.width=(d.queue.done/total*100).toFixed(0)+'%';}catch(_){document.getElementById('srv-status').textContent='Sin conexión';}}
+setInterval(updateStatus,5000);setInterval(loadJobs,5000);updateStatus();loadJobs();
 </script>
-</body></html>
+</body>
+</html>

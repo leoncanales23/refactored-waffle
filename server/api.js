@@ -1,154 +1,65 @@
-"use strict";
-const express  = require("express");
-const cors     = require("cors");
-const path     = require("path");
-const os       = require("os");
-const fs       = require("fs");
-const Anthropic = require("@anthropic-ai/sdk").default;
+// api.js v0.4.0 — NERHIA API con cola de renders, webhook y notificaciones
+const express = require('express');
+const path = require('path');
+const fs = require('fs');
+const Anthropic = require('@anthropic-ai/sdk');
+const queue = require('./queue');
+const { startWorker } = require('./worker');
 
 const app = express();
-app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "../public")));
+app.use(express.static(path.join(__dirname, '../public')));
 
-const PORT    = process.env.PORT || 8090;
-const VERSION = "0.4.0";
-const STARTED = Date.now();
-const ts = () => new Date().toISOString();
+const PORT = process.env.PORT || 8090;
+const START_TIME = Date.now();
 
-/* ── Helpers ── */
-function parseMetrics(body = {}) {
-  return {
-    city:      typeof body.city      === "string" ? body.city.trim()      : "Buin",
-    weekLabel: typeof body.weekLabel === "string" ? body.weekLabel.trim() : "Semana actual",
-    uvx:  clamp(body.uvx,  71),
-    mpi:  clamp(body.mpi,  68),
-    cai:  clamp(body.cai,  65),
-    iei:  clamp(body.iei,  63),
-    uei:  clamp(body.uei,  74),
-    pm10: clamp(body.pm10, 45, 0, 600),
-    alerta: ["OK","ALERTA","CRITICO"].includes(body.alerta) ? body.alerta : "OK",
-  };
-}
-function clamp(val, def, min=0, max=200) {
-  const n = parseFloat(val);
-  return isNaN(n) ? def : Math.min(Math.max(n, min), max);
+function parseMetrics(body) {
+  const clamp = (v, min, max) => Math.min(max, Math.max(min, Number(v) || 0));
+  return { pm25: clamp(body.pm25,0,500), no2: clamp(body.no2,0,500), co2: clamp(body.co2,0,5000), temperatura: clamp(body.temperatura,-10,60), humedad: clamp(body.humedad,0,100), location: body.location||'Ciudad desconocida', timestamp: body.timestamp||new Date().toISOString() };
 }
 
-/* ── Claude narrative ── */
-async function generateNarrative(data) {
+app.get('/status', (req, res) => res.json({ status:'ok', version:'0.4.0', uptime: Math.floor((Date.now()-START_TIME)/1000), queue: queue.stats(), timestamp: new Date().toISOString() }));
+
+app.get('/preview', (req, res) => res.json({ composition:'NERHIAReport', props:{ pm25:45,no2:30,co2:800,temperatura:22,humedad:65,location:'CDMX Sample',timestamp:new Date().toISOString(),narrative:'Calidad del aire moderada. Se recomienda precaución.' } }));
+
+app.post('/narrative', async (req, res) => {
   try {
+    const metrics = parseMetrics(req.body);
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-    const r = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 220,
-      messages: [{ role: "user", content:
-        `Eres NERHIA, el sistema de inteligencia urbana de ${data.city}. ` +
-        `Genera un párrafo técnico (máx 3 oraciones) resumiendo la semana urbana: ` +
-        `UVX=${data.uvx}, MPI=${data.mpi}, CAI=${data.cai}, IEI=${data.iei}, UEI=${data.uei}, ` +
-        `PM10=${data.pm10} µg/m³, Alerta=${data.alerta}, Semana=${data.weekLabel}. ` +
-        `Tono: analítico, conciso. Sin saludos.`
-      }]
-    });
-    return r.content[0].text.trim();
-  } catch(e) {
-    console.error(`[${ts()}][NERHIA] Claude error:`, e.message);
-    return `Semana operacional en ${data.city}. Índices dentro del rango nominal.`;
-  }
-}
+    const msg = await client.messages.create({ model: 'claude-opus-4-5', max_tokens: 300, messages: [{ role: 'user', content: `Analiza estas métricas ambientales de NERHIA y da una narrativa de 2 oraciones en español:\n${JSON.stringify(metrics)}` }] });
+    res.json({ narrative: msg.content[0].text, metrics });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
 
-/* ── GET /status ── */
-app.get("/status", (_req, res) => res.json({
-  ok: true, service: "refactored-waffle", version: VERSION,
-  uptimeSeconds: Math.floor((Date.now()-STARTED)/1000), timestamp: ts()
-}));
-
-/* ── GET /health ── */
-app.get("/health", (_req, res) => res.json({ ok: true, version: VERSION }));
-
-/* ── GET /narrative ── */
-app.get("/narrative", async (req, res) => {
-  const data = parseMetrics(req.query);
+app.post('/render/enqueue', (req, res) => {
   try {
-    const narrative = await generateNarrative(data);
-    res.json({ ok: true, city: data.city, weekLabel: data.weekLabel, narrative });
-  } catch(err) {
-    res.status(500).json({ ok: false, error: err.message });
-  }
+    const metrics = parseMetrics(req.body);
+    const job = queue.add(metrics, req.body.webhookUrl, req.body.notifyEmail);
+    res.status(202).json({ message:'Job encolado', job, statusUrl:`/render/status/${job.id}` });
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-/* ── GET /preview ── */
-app.get("/preview", (req, res) => {
-  const data = parseMetrics(req.query);
-  res.json({ ok: true, composition: "NERHIAReport", props: data });
+app.get('/render/status/:id', (req, res) => {
+  const job = queue.get(req.params.id);
+  if (!job) return res.status(404).json({ error:'Job no encontrado' });
+  res.json(job);
 });
 
-/* ── POST /render ── ── ── ── ── NUEVO: render real ── */
-app.post("/render", async (req, res) => {
-  const data = parseMetrics(req.body);
-  const jobId = `nerhia-${Date.now()}`;
-  console.log(`[${ts()}][render] Iniciando job ${jobId} para ${data.city}…`);
-
-  try {
-    // 1. Generar narrativa con Claude
-    const narrative = await generateNarrative(data);
-    const inputProps = { ...data, narrative };
-    console.log(`[${ts()}][render] Narrativa generada ✓`);
-
-    // 2. Bundle de Remotion (se cachea tras el primer uso)
-    const { bundle } = require("@remotion/bundler");
-    const bundlePath = await bundle({
-      entryPoint: path.join(__dirname, "../src/index.ts"),
-      outDir: path.join(os.tmpdir(), "remotion-bundle"),
-    });
-    console.log(`[${ts()}][render] Bundle listo ✓`);
-
-    // 3. Seleccionar composición
-    const { selectComposition, renderMedia } = require("@remotion/renderer");
-    const composition = await selectComposition({
-      serveUrl: bundlePath,
-      id: "NERHIAReport",
-      inputProps,
-    });
-    console.log(`[${ts()}][render] Composición seleccionada: ${composition.id} (${composition.durationInFrames} frames) ✓`);
-
-    // 4. Renderizar a MP4
-    const outPath = path.join(os.tmpdir(), `${jobId}.mp4`);
-    await renderMedia({
-      composition,
-      serveUrl: bundlePath,
-      codec: "h264",
-      outputLocation: outPath,
-      inputProps,
-      chromiumOptions: {
-        // Usar el Chromium instalado en el contenedor
-        executablePath: process.env.CHROMIUM_PATH || "/usr/bin/chromium",
-        disableWebSecurity: true,
-      },
-      onProgress: ({ progress }) => {
-        if (Math.round(progress * 100) % 20 === 0) {
-          console.log(`[${ts()}][render] Progreso: ${Math.round(progress * 100)}%`);
-        }
-      },
-    });
-    console.log(`[${ts()}][render] MP4 generado → ${outPath} ✓`);
-
-    // 5. Enviar archivo y limpiar
-    res.setHeader("Content-Type", "video/mp4");
-    res.setHeader("Content-Disposition", `attachment; filename="nerhia-${data.city}-${data.weekLabel}.mp4"`);
-    const stream = fs.createReadStream(outPath);
-    stream.pipe(res);
-    stream.on("end", () => {
-      try { fs.unlinkSync(outPath); } catch(_) {}
-      console.log(`[${ts()}][render] Entregado y limpiado ✓`);
-    });
-
-  } catch(err) {
-    console.error(`[${ts()}][render] Error:`, err.message);
-    res.status(500).json({ ok: false, error: err.message, jobId });
-  }
+app.get('/render/jobs', (req, res) => {
+  const limit = parseInt(req.query.limit)||20;
+  res.json(queue.list().slice(0, limit));
 });
 
-app.listen(PORT, () =>
-  console.log(`[${ts()}][Waffle] v${VERSION} activa · puerto ${PORT}`)
-);
+app.get('/render/download/:id', (req, res) => {
+  const job = queue.get(req.params.id);
+  if (!job||job.status!=='done') return res.status(404).json({ error:'Video no disponible' });
+  res.download(job.outputPath, `nerhia-${job.id}.mp4`);
+});
+
+app.post('/render', (req, res) => {
+  const metrics = parseMetrics(req.body);
+  const job = queue.add(metrics, null, null);
+  res.status(202).json({ message:'Render encolado (usa /render/status/:id para seguimiento)', jobId: job.id, statusUrl:`/render/status/${job.id}` });
+});
+
+app.listen(PORT, () => { console.log(`[NERHIA API v0.4.0] Puerto ${PORT}`); startWorker(); });
