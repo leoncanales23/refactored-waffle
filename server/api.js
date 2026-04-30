@@ -4,7 +4,6 @@ const path = require('path');
 const fs = require('fs');
 const Anthropic = require('@anthropic-ai/sdk');
 const queue = require('./queue');
-const { startWorker } = require('./worker');
 
 const app = express();
 app.use(express.json());
@@ -62,4 +61,4 @@ app.post('/render', (req, res) => {
   res.status(202).json({ message:'Render encolado (usa /render/status/:id para seguimiento)', jobId: job.id, statusUrl:`/render/status/${job.id}` });
 });
 
-app.listen(PORT, () => { console.log(`[NERHIA API v0.4.0] Puerto ${PORT}`); startWorker(); });
+app.listen(PORT, () => { console.log(`[NERHIA API v0.4.0] Puerto ${PORT}`); });
